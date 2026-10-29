@@ -19,16 +19,16 @@
 
 export const HALFTONE_CONFIG = {
   mode: 0,                 // 0: mono
-  shape: 0,                // 0: circular dot
-  cellSize: 6.8,           // Screen spacing in CSS px: refined balance for facial anatomy and clear negative space
-  angle: 45,               // Screen rotation in degrees (standard 45° lithographic angle)
-  dotScale: 1.0,           // Scaling factor for dots
-  inkColor: [1.0, 1.0, 1.0],         // Pure white dots
+  shape: 2,                // 2: square pixel cell (digital print aesthetic)
+  cellSize: 7.0,           // Square grid pitch in CSS px
+  angle: 0,                // 0° for axis-aligned horizontal/vertical square pixels
+  dotScale: 1.0,           // Scaling factor for cells
+  inkColor: [1.0, 1.0, 1.0],         // Pure white square cells
   paperColor: [0.0, 0.0, 0.0],       // Black/transparent substrate
   contrast: 1.15,          // Balanced tonal contrast for distinct highlights and midtones
   brightness: 0.02,        // Brightness calibration for natural skin rendering
   invert: false,           // Negative print
-  roughness: 0.0,          // 0.0 gives crisp, mathematically pure circular dots
+  roughness: 0.0,          // 0.0 gives crisp, mathematically pure square edges
   revealRadius: 140,       // Reveal radius in CSS px around cursor
   softness: 0.65,          // Soft photographic blend on reveal edge
   linger: 1.15,            // Seconds the reveal trail persists before decaying
@@ -159,18 +159,15 @@ float metric(vec2 f) {
 
 float reach(float t) {
   t = clamp(t, 0.0, 1.0);
-  if (uShape < 0.5) {
+  if (uShape < 2.5) {
     if (t <= 0.001) return 0.0;
-    // Adaptive circular dot response:
-    // - t <= 0.001 (pupils, cavities, background): exactly 0.0 (clean dark accents)
-    // - t in 0.02..0.10 (shirt fabric, hair volume): delicate pinpricks (r: 0.07..0.10) preserving outlines
-    // - t in 0.10..0.30 (moustache, eyebrows, nostrils, lips): fine detail dots (r: 0.10..0.19)
-    // - t in 0.30..0.65 (midtones/cheeks): balanced intermediate dots (r: 0.19..0.32) with open negative space
-    // - t in 0.65..1.00 (highlights): bold circular dots (r: 0.32..0.44), never touching neighbors
+    // Adaptive cell half-width (for square cells when uShape == 2):
+    // - Deep shadows / contours (t near 0): fine micro-squares (r: 0.065..0.10) preserving hair volume & shoulder outlines
+    // - Facial features (t in 0.1..0.3): fine, delicate squares rendering eyes, moustache, lips, nostrils
+    // - Midtones (t in 0.3..0.65): smooth tonal gradation with clear negative space between squares
+    // - Highlights (t in 0.65..1.0): prominent square cells, capped at 0.44 to preserve at least 12% gap
     return mix(0.065, 0.44, pow(t, 0.82));
   }
-  if (uShape < 1.5) return t < 0.7 ? sqrt(t * 0.92 / 3.14159) : mix(0.4497, 0.72, (t - 0.7) / 0.3);
-  if (uShape < 2.5) return 0.5 * sqrt(t) + 0.02 * t;
   if (uShape < 3.5) return t < 0.5 ? sqrt(t * 0.5) : 1.0 - sqrt((1.0 - t) * 0.5);
   if (uShape < 4.5) return 0.52 * t;
   return (1.0 - sqrt(1.0 - t)) * 0.5 + 0.02 * t;
