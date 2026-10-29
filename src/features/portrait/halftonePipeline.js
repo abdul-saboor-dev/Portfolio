@@ -4,30 +4,34 @@
  * WebGL2 Halftone Reveal Rendering Pipeline.
  * Adapted from React Bits HalftoneReveal for interactive multi-frame portraiture.
  *
- * Features:
- * - WebGL2 (#version 300 es) with ping-pong mask FBOs for smooth brush trail accumulation.
- * - Dynamic texture updating via gl.texSubImage2D on a pre-allocated 512×512 texture.
- * - Alpha transparency preservation: respects original PNG silhouette, outputting vec4(0.0)
- *   outside the subject so LightRays and GridCanvas remain visible.
- * - Photographic monochrome halftone printing (dot matrix) and sharp photographic reveal.
- * - Graceful lifecycle: handles context loss/restoration and resource cleanup.
+ * Visual Features:
+ * - Clearly distinguishable circular white dots with visible negative space between them.
+ * - Dynamic dot sizing that strictly follows the active frame's shading and luminance:
+ *   large white dots in highlights, medium circular dots in midtones, and tiny/zero dots in shadows.
+ * - Transparent negative space: gaps between dots are completely transparent, allowing the
+ *   underlying black portfolio background and radiant LightRays to show through.
+ * - Silhouette alpha preservation: original PNG cutout boundary is respected with clean
+ *   antialiasing, never rendering outside the person or filling a solid background.
+ * - Sharp cursor reveal: area around cursor seamlessly resolves into the sharp monochrome photograph.
+ * - Dynamic active frame sync: in-place 512×512 sub-image upload keeps both halftone dots and
+ *   sharp reveal updated with head gaze tracking across all 340 frames.
  */
 
 export const HALFTONE_CONFIG = {
-  mode: 0,              // 0: mono
-  shape: 0,             // 0: dot
-  cellSize: 4.8,        // Spacing of the halftone screen in CSS px (preserves fine facial detail)
-  angle: 45,            // Halftone screen angle (degrees)
-  dotScale: 0.94,       // Dot size scale (keeps dots separated in midtones)
-  inkColor: [0.04, 0.04, 0.05],   // Deep charcoal/black ink
-  paperColor: [0.96, 0.95, 0.93], // Archival warm off-white paper
-  contrast: 1.06,       // Contrast curve before dot mapping
-  brightness: 0.0,      // Brightness offset
-  invert: false,        // Invert negative/positive
-  roughness: 0.012,     // Subtle paper fiber roughness
-  revealRadius: 135,    // Reveal radius in CSS px around pointer
-  softness: 0.65,       // Edge blend softness (smooth photographic falloff)
-  linger: 1.15,         // Seconds for the reveal trail to fade back to halftone
+  mode: 0,                 // 0: mono
+  shape: 0,                // 0: circular dot
+  cellSize: 7.0,           // Screen spacing in CSS px: gives distinct circular dots with clear negative space
+  angle: 45,               // Screen rotation in degrees (standard 45° lithographic angle)
+  dotScale: 1.0,           // Scaling factor for dots
+  inkColor: [1.0, 1.0, 1.0],         // Pure white dots
+  paperColor: [0.0, 0.0, 0.0],       // Black/transparent substrate
+  contrast: 1.16,          // Contrast curve: separates highlights, midtones, and shadows
+  brightness: 0.02,        // Brightness tuning for skin highlight clarity
+  invert: false,           // Negative print
+  roughness: 0.0,          // 0.0 gives crisp, mathematically pure circular dots
+  revealRadius: 140,       // Reveal radius in CSS px around cursor
+  softness: 0.65,          // Soft photographic blend on reveal edge
+  linger: 1.15,            // Seconds the reveal trail persists before decaying
 };
 
 const MASK_SCALE = 0.5;
@@ -136,11 +140,12 @@ vec3 gradeColor(vec3 c) {
 }
 
 vec3 tone(vec3 c) {
-  return pow(max(c, 0.0), vec3(1.5));
+  return pow(max(c, 0.0), vec3(1.4));
 }
 
 float press(float t, float alpha) {
-  return (0.05 + clamp(t, 0.0, 1.0) * 0.89) * alpha;
+  // Pure tonal scaling without artificial floor, allowing shadows to gracefully taper to 0
+  return clamp(t, 0.0, 1.0) * alpha;
 }
 
 float metric(vec2 f) {
@@ -172,7 +177,9 @@ vec2 center(vec2 p, float angle) {
 float dots(vec2 p, float angle, float t, float seed) {
   vec2 q = rotate(angle) * p / uCell;
   float d = metric(fract(q) - 0.5);
-  d += (noise(p * 0.42 + seed * 17.0) - 0.5) * uRough * 0.18;
+  if (uRough > 0.0) {
+    d += (noise(p * 0.42 + seed * 17.0) - 0.5) * uRough * 0.18;
+  }
   float r = reach(t) * uScale;
   float w = max(fwidth(d), 0.0001) * 0.75;
   return smoothstep(r + w, r - w, d) * clamp(r / (w * 2.0), 0.0, 1.0);
@@ -200,9 +207,10 @@ void main() {
     return;
   }
 
-  // 1. Photographic halftone mono print calculation
-  float kDot = dots(p, base, coverage(photo(center(p, base), lod, 0.5)), 0.0);
-  vec3 print = mix(uPaper, uInk, kDot);
+  // 1. Calculate halftone dot mask from image at cell center
+  vec4 sampleAtCenter = photo(center(p, base), lod, 0.5);
+  float t = coverage(sampleAtCenter);
+  float kDot = dots(p, base, t, 0.0);
 
   // 2. Cursor reveal mask sampling
   vec2 maskUv = vec2(p.x / uView.x, 1.0 - p.y / uView.y);
@@ -211,19 +219,26 @@ void main() {
 
   vec2 q = rotate(base) * p / uCell;
   float d = metric(fract(q) - 0.5);
-  float r = reach(1.0) * 1.08 * shown;
+  float rReveal = reach(1.0) * 1.08 * shown;
   float w = max(fwidth(d), 0.0001) * 0.75;
-  float k = smoothstep(r + w, r - w, d) * clamp(r / (w * 2.0), 0.0, 1.0);
+  float kReveal = smoothstep(rReveal + w, rReveal - w, d) * clamp(rReveal / (w * 2.0), 0.0, 1.0);
 
   // 3. Monochrome photographic tone for revealed image
   float sharpLuma = dot(sharp.rgb, LUMA);
-  vec3 real = vec3(sharpLuma);
+  vec3 photoColor = vec3(sharpLuma);
 
-  // 4. Composite print with sharp photo
-  vec3 composite = mix(print, real, k);
+  // 4. Halftone print: White dots over transparent negative space
+  vec3 halftoneColor = uInk;
+  float halftoneAlpha = kDot * sharp.a;
 
-  // 5. Premultiplied alpha for clean silhouette edge antialiasing
-  outColor = vec4(composite * sharp.a, sharp.a);
+  // 5. Composite halftone print with sharp photo inside reveal zone
+  float revealFactor = max(shown, kReveal);
+  vec3 compositeColor = mix(halftoneColor, photoColor, revealFactor);
+  float compositeAlpha = mix(halftoneAlpha, sharp.a, revealFactor);
+
+  // 6. Output premultiplied alpha: transparent gaps between dots allow black background
+  // and LightRays to shine through, while dots are solid white.
+  outColor = vec4(compositeColor * compositeAlpha, compositeAlpha);
 }
 `;
 
