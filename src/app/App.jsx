@@ -5,7 +5,6 @@
 
 import { useState, useCallback, useRef } from 'react';
 import PortraitCanvas from '../features/portrait/PortraitCanvas.jsx';
-import HalftoneBackground from '../features/background/HalftoneBackground.jsx';
 import { useFramePreloader } from '../features/portrait/useFramePreloader.js';
 import { gridToIndex, NEUTRAL_YAW, NEUTRAL_PITCH } from '../features/portrait/frameData.js';
 import '../styles/App.css';
@@ -44,9 +43,6 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* ── Background: Halftone Atmosphere ── */}
-      <HalftoneBackground className="background-rays" />
-
       {/* ── Controls ── */}
       <div className="controls">
         <button

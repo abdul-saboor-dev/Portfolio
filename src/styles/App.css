@@ -15,7 +15,6 @@
   --debug-border:    rgba(100, 100, 160, 0.3);
   --progress-track:  rgba(255, 255, 255, 0.08);
   --progress-fill:   rgba(130, 110, 255, 0.8);
-  --vignette:        radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.7) 100%);
 }
 
 /* ── Root app container ── */
@@ -28,44 +27,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-/* ── Animated distorted grid canvas (Layer 0) ──────────────────────────────
-   Renders the animated 24×24 px dark grid on a 2D canvas with organic
-   bending/contraction distortion following the portrait silhouette, scale,
-   head angle, face position, and shoulder shape across all poses.
-   Sits behind the portrait (z-index 0) and ignores pointer events.
-   ─────────────────────────────────────────────────────────────────────────── */
-.grid-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-  pointer-events: none;
-  display: block;
-}
-
-/* ── LightRays background layer (Layer 0) ── */
-.background-rays {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  height: 100dvh;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Subtle vignette for cinematic depth (Layer 1) */
-.app::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: var(--vignette);
-  pointer-events: none;
-  z-index: 1;
-  transition: background 0.4s ease;
 }
 
 /* ── Portrait Stage (Layer 2) ── */
@@ -102,15 +63,10 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  /* Cinematic monochrome photographic treatment */
-  filter: grayscale(1);
 }
 
 /* Mobile: restore full viewport height so the portrait feels immersive */
 @media (max-width: 600px) {
-  .app {
-    --vignette: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.5) 100%);
-  }
   .portrait-stage {
     height: 100vh;
     height: 100dvh;

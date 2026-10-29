@@ -509,16 +509,29 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
           }
         }
       } else if (ctx) {
-        // 2D Fallback Rendering
+        // 2D Fallback Rendering (used only if WebGL2 is unavailable)
         const isHeadMoving = (anim.mode !== MODE_TRACKING) ||
           Math.abs(cur.yaw   - tgt.yaw)   > 0.001 ||
           Math.abs(cur.pitch - tgt.pitch) > 0.001;
 
-        if (idx === lastIdxRef.current && !isHeadMoving) return;
+        if (idx === lastIdxRef.current && !isHeadMoving && !pointer.inside) return;
         lastIdxRef.current = idx;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Base monochrome
+        ctx.filter = 'grayscale(1)';
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.filter = 'none';
+
+        // Full-colour reveal around pointer
+        if (pointer.inside) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(pointer.x * (canvas.width / 512), pointer.y * (canvas.height / 512), HALFTONE_CONFIG.revealRadius, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          ctx.restore();
+        }
 
         if (onFrameChange) {
           const col = idx % COLS;

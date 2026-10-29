@@ -223,22 +223,21 @@ void main() {
   float w = max(fwidth(d), 0.0001) * 0.75;
   float kReveal = smoothstep(rReveal + w, rReveal - w, d) * clamp(rReveal / (w * 2.0), 0.0, 1.0);
 
-  // 3. Monochrome photographic tone for revealed image
-  float sharpLuma = dot(sharp.rgb, LUMA);
-  vec3 photoColor = vec3(sharpLuma);
+  // 3. Original full-colour photograph for revealed image
+  vec3 photoColor = sharp.rgb;
 
   // 4. Halftone print: White dots over transparent negative space
-  vec3 halftoneColor = uInk;
-  float halftoneAlpha = kDot * sharp.a;
-
-  // 5. Composite halftone print with sharp photo inside reveal zone
+  // 5. Composite halftone print with full-colour photo inside reveal zone
   float revealFactor = max(shown, kReveal);
-  vec3 compositeColor = mix(halftoneColor, photoColor, revealFactor);
-  float compositeAlpha = mix(halftoneAlpha, sharp.a, revealFactor);
 
-  // 6. Output premultiplied alpha: transparent gaps between dots allow black background
-  // and LightRays to shine through, while dots are solid white.
-  outColor = vec4(compositeColor * compositeAlpha, compositeAlpha);
+  // Premultiplied alpha composite:
+  // - Outside reveal (revealFactor == 0): pure white dots (uInk) on transparent gaps
+  // - Inside reveal (revealFactor == 1): original full-colour photograph (photoColor)
+  // - Transition (0 < revealFactor < 1): smooth feathered dissolution into full colour
+  vec3 rgbPremul = uInk * (kDot * sharp.a * (1.0 - revealFactor)) + photoColor * (sharp.a * revealFactor);
+  float totalAlpha = mix(kDot * sharp.a, sharp.a, revealFactor);
+
+  outColor = vec4(rgbPremul, totalAlpha);
 }
 `;
 
