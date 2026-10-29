@@ -303,7 +303,7 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
 
       lastIdxRef.current = -1;
     }
-  }, []);
+  }, [useFallback2D]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
