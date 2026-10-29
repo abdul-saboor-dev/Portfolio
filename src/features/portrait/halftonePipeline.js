@@ -20,13 +20,13 @@
 export const HALFTONE_CONFIG = {
   mode: 0,                 // 0: mono
   shape: 0,                // 0: circular dot
-  cellSize: 7.0,           // Screen spacing in CSS px: gives distinct circular dots with clear negative space
+  cellSize: 6.8,           // Screen spacing in CSS px: refined balance for facial anatomy and clear negative space
   angle: 45,               // Screen rotation in degrees (standard 45° lithographic angle)
   dotScale: 1.0,           // Scaling factor for dots
   inkColor: [1.0, 1.0, 1.0],         // Pure white dots
   paperColor: [0.0, 0.0, 0.0],       // Black/transparent substrate
-  contrast: 1.16,          // Contrast curve: separates highlights, midtones, and shadows
-  brightness: 0.02,        // Brightness tuning for skin highlight clarity
+  contrast: 1.15,          // Balanced tonal contrast for distinct highlights and midtones
+  brightness: 0.02,        // Brightness calibration for natural skin rendering
   invert: false,           // Negative print
   roughness: 0.0,          // 0.0 gives crisp, mathematically pure circular dots
   revealRadius: 140,       // Reveal radius in CSS px around cursor
@@ -159,7 +159,16 @@ float metric(vec2 f) {
 
 float reach(float t) {
   t = clamp(t, 0.0, 1.0);
-  if (uShape < 0.5) return t < 0.785 ? sqrt(t / 3.14159) : mix(0.5, 0.72, (t - 0.785) / 0.215);
+  if (uShape < 0.5) {
+    if (t <= 0.001) return 0.0;
+    // Adaptive circular dot response:
+    // - t <= 0.001 (pupils, cavities, background): exactly 0.0 (clean dark accents)
+    // - t in 0.02..0.10 (shirt fabric, hair volume): delicate pinpricks (r: 0.07..0.10) preserving outlines
+    // - t in 0.10..0.30 (moustache, eyebrows, nostrils, lips): fine detail dots (r: 0.10..0.19)
+    // - t in 0.30..0.65 (midtones/cheeks): balanced intermediate dots (r: 0.19..0.32) with open negative space
+    // - t in 0.65..1.00 (highlights): bold circular dots (r: 0.32..0.44), never touching neighbors
+    return mix(0.065, 0.44, pow(t, 0.82));
+  }
   if (uShape < 1.5) return t < 0.7 ? sqrt(t * 0.92 / 3.14159) : mix(0.4497, 0.72, (t - 0.7) / 0.3);
   if (uShape < 2.5) return 0.5 * sqrt(t) + 0.02 * t;
   if (uShape < 3.5) return t < 0.5 ? sqrt(t * 0.5) : 1.0 - sqrt((1.0 - t) * 0.5);
@@ -186,11 +195,18 @@ float dots(vec2 p, float angle, float t, float seed) {
 }
 
 float coverage(vec4 image) {
-  float shade = dot(tone(gradeColor(image.rgb)), LUMA);
-  float paper = dot(tone(uPaper), LUMA);
-  float span = dot(tone(uInk), LUMA) - paper;
-  float t = abs(span) < 0.02 ? 1.0 - shade : (shade - paper) / span;
-  return press(t, image.a);
+  float luma = dot(image.rgb, LUMA);
+
+  // Deep shadow threshold: pupils and background drop to 0
+  if (luma <= 0.02) return 0.0;
+
+  // Gentle photographic ramp preserving shadow contours and fabric
+  float t = smoothstep(0.02, 0.96, luma);
+
+  // Midtone gamma
+  t = pow(t, 0.92);
+
+  return clamp(t, 0.0, 1.0) * image.a;
 }
 
 void main() {
@@ -207,8 +223,8 @@ void main() {
     return;
   }
 
-  // 1. Calculate halftone dot mask from image at cell center
-  vec4 sampleAtCenter = photo(center(p, base), lod, 0.5);
+  // 1. Calculate halftone dot mask from image at cell center (lod 0.0 for crisp anatomical feature resolution)
+  vec4 sampleAtCenter = photo(center(p, base), 0.0, 0.5);
   float t = coverage(sampleAtCenter);
   float kDot = dots(p, base, t, 0.0);
 
