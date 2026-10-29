@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import PortraitCanvas from '../features/portrait/PortraitCanvas.jsx';
-import LightRays from '../features/background/LightRays.jsx';
+import HalftoneBackground from '../features/background/HalftoneBackground.jsx';
 import { useFramePreloader } from '../features/portrait/useFramePreloader.js';
 import { gridToIndex, NEUTRAL_YAW, NEUTRAL_PITCH } from '../features/portrait/frameData.js';
 import '../styles/App.css';
@@ -44,27 +44,8 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* ── Background: LightRays ── */}
-      <LightRays
-        className="background-rays"
-        raysOrigin="top-center"
-        raysColor="#ffffff"
-        raysSpeed={0.5}
-        lightSpread={0.85}
-        rayLength={2.5}
-        rayDensity={1}
-        glow={0.35}
-        haze={0.2}
-        intensity={0.65}
-        followMouse={true}
-        mouseInfluence={0.06}
-        cursorShadow={true}
-        shadowRadius={75}
-        shadowStrength={0.45}
-        clickPulse={false}
-        opacity={0.45}
-        maxDevicePixelRatio={1.5}
-      />
+      {/* ── Background: Halftone Atmosphere ── */}
+      <HalftoneBackground className="background-rays" />
 
       {/* ── Controls ── */}
       <div className="controls">
