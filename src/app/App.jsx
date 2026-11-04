@@ -36,25 +36,12 @@ export default function App() {
 
   const { getImage, loadedSet, isCenterLoaded } = useFramePreloader();
 
-  // Intro coordination states
+  // Intro coordination state: name typography preloader completion
   const [heroTypoDone, setHeroTypoDone] = useState(prefersReducedMotion);
-  const [portraitRevealed, setPortraitRevealed] = useState(prefersReducedMotion);
 
   const handleHeroReady = useCallback(() => {
     setHeroTypoDone(true);
   }, []);
-
-  // Reveal portrait once typography construction completes AND center neutral frame is ready
-  useEffect(() => {
-    if (prefersReducedMotion) return;
-    if (heroTypoDone && isCenterLoaded) {
-      // Smooth cinematic reveal of the portrait
-      const timer = setTimeout(() => {
-        setPortraitRevealed(true);
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-  }, [heroTypoDone, isCenterLoaded, prefersReducedMotion]);
 
   const handleFrameChange = useCallback((_info) => {
     // Underlying frame info callback preserved
@@ -70,7 +57,7 @@ export default function App() {
 
       {/* ── Centerpiece Portrait Stage ── */}
       <div
-        className={`portrait-stage ${portraitRevealed ? 'is-revealed' : 'is-hidden'}`}
+        className="portrait-stage"
         onContextMenu={(e) => e.preventDefault()}
       >
         <PortraitCanvas
@@ -79,6 +66,8 @@ export default function App() {
           getImage={getImage}
           loadedSet={loadedSet}
           isCenterLoaded={isCenterLoaded}
+          heroTypoDone={heroTypoDone}
+          prefersReducedMotion={prefersReducedMotion}
           onFrameChange={handleFrameChange}
         />
       </div>

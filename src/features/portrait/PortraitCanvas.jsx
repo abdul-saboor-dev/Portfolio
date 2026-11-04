@@ -1,17 +1,15 @@
 /**
  * PortraitCanvas.jsx
  *
- * Mouse/touch/pen-controlled portrait using 340 transparent PNG frames with
- * the React Bits HalftoneReveal WebGL2 shader effect.
+ * Mouse/touch/pen-controlled portrait using 340 transparent WebP frames with
+ * the WebGL2 halftone shader effect.
  *
  * ── Visual Behavior ──────────────────────────────────────────────────────────
  * - Default State: Portrait renders as a fine-grained monochrome halftone print.
- * - Cursor Inside: Reveals the sharp underlying monochrome photograph beneath the
- *   cursor, leaving a lingering, fading trail.
- * - Cursor Outside / Exit: Reveal halts and trail decays back to pure halftone while
- *   head tracking continues across the entire viewport.
- * - Mobile Touch: Touch-and-drag reveals around the touch point; release lets trail decay.
- * - Transparency: Alpha cutout is strictly preserved, keeping LightRays and GridCanvas visible.
+ * - Colour reveal removed: portrait remains permanently halftone at all times.
+ * - Cursor tracking controls head pose across the full viewport.
+ * - Mobile Touch: Touch-and-drag tracks head pose; portrait stays halftone.
+ * - Transparency: Alpha cutout is strictly preserved.
  * - Fallback: Automatically falls back to standard 2D canvas drawing if WebGL2 is unavailable.
  *
  * ── State machine (animRef.current.mode) ────────────────────────────────────
@@ -39,7 +37,7 @@ import {
   nearestLoadedIndex,
   clamp,
 } from './frameData.js';
-import { HalftonePipeline, HALFTONE_CONFIG } from './halftonePipeline.js';
+import { HalftonePipeline } from './halftonePipeline.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const FRAME_SIZE          = 512;
@@ -55,6 +53,15 @@ const YAW_MIN   = YAW_VALUES[0];
 const YAW_MAX   = YAW_VALUES[COLS - 1];
 const PITCH_MIN = PITCH_VALUES[0];
 const PITCH_MAX = PITCH_VALUES[PITCH_VALUES.length - 1];
+
+// Neutral center frame index (9 * 20 + 9 = 189)
+const NEUTRAL_FRAME_INDEX = NEUTRAL_ROW * COLS + NEUTRAL_COL;
+
+// Formation sequence states (starts strictly after name preloader completes)
+const FORMATION_WAITING = 0; // Waiting for name typography animation to finish
+const FORMATION_RUNNING = 1; // Progressively revealing pixels of frame 189
+const FORMATION_DONE    = 2; // Complete; interactive head tracking active
+const FORMATION_DURATION_MS = 2000;
 
 // ── Easing ────────────────────────────────────────────────────────────────────
 function easeInOut(t) {
@@ -79,7 +86,16 @@ function checkWebGL2Supported() {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 const PortraitCanvas = forwardRef(function PortraitCanvas(
-  { getImage, loadedSet, isCenterLoaded, onFrameChange, poseRef },
+  {
+    getImage,
+    loadedSet,
+    isCenterLoaded,
+    heroTypoDone = false,
+    prefersReducedMotion = false,
+    onFrameChange,
+    onFormationComplete,
+    poseRef,
+  },
   ref,
 ) {
   const canvasRef = useRef(null);
@@ -93,6 +109,13 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
 
   // WebGL pipeline reference
   const pipelineRef = useRef(null);
+
+  // Formation animation state
+  const formationStateRef = useRef(
+    prefersReducedMotion ? FORMATION_DONE : FORMATION_WAITING
+  );
+  const formationProgressRef = useRef(prefersReducedMotion ? 1.0 : 0.0);
+  const formationStartTsRef = useRef(null);
 
   // Current displayed yaw/pitch (mutated every RAF tick)
   const curRef = useRef({ yaw: NEUTRAL_YAW, pitch: NEUTRAL_PITCH });
@@ -115,22 +138,29 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
   // Last pointer coords (jitter filter)
   const lastPtrRef = useRef({ x: null, y: null });
 
-  // Halftone reveal pointer state (local canvas CSS coords)
-  const revealPointerRef = useRef({
-    x: 256,
-    y: 256,
-    inside: false,
-    fresh: true,
-  });
+  // Halftone reveal removed: pointer only needed for head tracking
+  // revealPointerRef removed
 
-  // Trail timeout tracking
-  const trailUntilRef = useRef(0);
+  // Trail timeout tracking removed (no reveal trail)
 
   // Dirty-check: last rendered frame index
   const lastIdxRef = useRef(-1);
 
   // Previous RAF timestamp for Δt
   const lastTsRef = useRef(null);
+
+  // Trigger formation once name preloader finishes and center frame (189) is loaded
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      formationStateRef.current = FORMATION_DONE;
+      formationProgressRef.current = 1.0;
+      return;
+    }
+    if (heroTypoDone && isCenterLoaded && formationStateRef.current === FORMATION_WAITING) {
+      formationStateRef.current = FORMATION_RUNNING;
+      formationStartTsRef.current = null;
+    }
+  }, [heroTypoDone, isCenterLoaded, prefersReducedMotion]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
   function clearIdleTimer() {
@@ -161,31 +191,14 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
 
   // ── Pointer handler ────────────────────────────────────────────────────────
   function handlePointer(clientX, clientY) {
+    // Only track cursor after portrait formation has completely finished
+    if (formationStateRef.current !== FORMATION_DONE) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
 
-    // 1. Check if pointer is within portrait canvas visible bounds for reveal
-    const isInside = (
-      rect.width > 0 && rect.height > 0 &&
-      clientX >= rect.left && clientX <= rect.right &&
-      clientY >= rect.top && clientY <= rect.bottom
-    );
-
-    if (isInside) {
-      const localX = clientX - rect.left;
-      const localY = clientY - rect.top;
-      if (!revealPointerRef.current.inside) {
-        revealPointerRef.current.fresh = true;
-      }
-      revealPointerRef.current.inside = true;
-      revealPointerRef.current.x = localX;
-      revealPointerRef.current.y = localY;
-    } else {
-      revealPointerRef.current.inside = false;
-    }
-
-    // 2. Jitter filter for head tracking idle deferral
+    // Jitter filter for head tracking idle deferral
     const prev = lastPtrRef.current;
     let intentional = true;
     if (prev.x !== null) {
@@ -199,7 +212,7 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
       lastPtrRef.current = { x: clientX, y: clientY };
     }
 
-    // 3. Head Tracking (interactive over full viewport)
+    // Head Tracking (interactive over full viewport)
     const nx = clamp((clientX - rect.left) / rect.width  * 2 - 1, -1, 1);
     const ny = clamp((clientY - rect.top)  / rect.height * 2 - 1, -1, 1);
     const { yaw, pitch } = normalizedToYawPitch(nx, ny);
@@ -232,7 +245,8 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
   }
 
   function handlePointerLeave() {
-    revealPointerRef.current.inside = false;
+    if (formationStateRef.current !== FORMATION_DONE) return;
+    // No reveal to clear — kept for idle timer reset only
   }
 
   // ── Imperative API (recenter button) ─────────────────────────────────────────
@@ -409,53 +423,111 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
     const draw = (ts) => {
       rafRef.current = requestAnimationFrame(draw);
 
-      if (!isCenterLoaded && loadedSet.size === 0) {
-        lastTsRef.current = ts;
-        return;
-      }
-
       const rawDelta = lastTsRef.current !== null ? ts - lastTsRef.current : 16;
       const deltaMs  = Math.min(rawDelta, MAX_DELTA_MS);
-      const dt       = deltaMs / 1000;
       lastTsRef.current = ts;
 
       const cur  = curRef.current;
       const tgt  = tgtRef.current;
       const anim = animRef.current;
 
-      // ── Animation state machine ──────────────────────────────────────────────
-      if (anim.mode === MODE_RETURNING || anim.mode === MODE_HANDOFF) {
-        if (anim.startTs === null) anim.startTs = ts;
+      const isWaiting = formationStateRef.current === FORMATION_WAITING;
+      const isForming = formationStateRef.current === FORMATION_RUNNING;
 
-        const elapsed = ts - anim.startTs;
-        const t = Math.min(elapsed / anim.duration, 1);
-        const e = easeInOut(t);
+      // ── Formation Phase: Waiting for typography preloader to complete ────────────
+      // During name typography construction, keep portrait canvas 100% transparent.
+      // Typography constructs completely unhindered on pure #050505 background.
+      if (isWaiting) {
+        cur.yaw = NEUTRAL_YAW;
+        cur.pitch = NEUTRAL_PITCH;
+        tgtRef.current = { yaw: NEUTRAL_YAW, pitch: NEUTRAL_PITCH };
+        formationProgressRef.current = 0.0;
 
-        if (anim.mode === MODE_RETURNING) {
-          cur.yaw   = anim.startYaw   + (NEUTRAL_YAW   - anim.startYaw)   * e;
-          cur.pitch = anim.startPitch + (NEUTRAL_PITCH - anim.startPitch) * e;
-        } else {
-          cur.yaw   = anim.startYaw   + (tgt.yaw   - anim.startYaw)   * e;
-          cur.pitch = anim.startPitch + (tgt.pitch - anim.startPitch) * e;
+        if (maskCanvasRef.current) {
+          const mctx = maskCanvasRef.current.getContext('2d');
+          if (mctx) mctx.clearRect(0, 0, maskCanvasRef.current.width, maskCanvasRef.current.height);
+          lastMaskIdxRef.current = -1;
         }
 
-        if (t >= 1) {
-          if (anim.mode === MODE_RETURNING) {
-            cur.yaw   = NEUTRAL_YAW;
-            cur.pitch = NEUTRAL_PITCH;
-            tgtRef.current = { yaw: NEUTRAL_YAW, pitch: NEUTRAL_PITCH };
-          } else {
-            cur.yaw   = tgt.yaw;
-            cur.pitch = tgt.pitch;
-          }
-          anim.mode = MODE_TRACKING;
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } else if (pipelineRef.current) {
+          const gl = pipelineRef.current.gl;
+          gl.viewport(0, 0, canvas.width, canvas.height);
+          gl.clearColor(0, 0, 0, 0);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+        }
+
+        if (poseRef?.current) {
+          poseRef.current.yaw = cur.yaw;
+          poseRef.current.pitch = cur.pitch;
+          poseRef.current.canvas = canvas;
+        }
+        return;
+      }
+
+      if (!isCenterLoaded && loadedSet.size === 0) {
+        return;
+      }
+
+      // ── Formation Phase: Cinematic pixel-by-pixel construction ─────────────────
+      if (isForming) {
+        if (formationStartTsRef.current === null) {
+          formationStartTsRef.current = ts;
+        }
+        const elapsed = ts - formationStartTsRef.current;
+        const rawProgress = Math.min(1.0, elapsed / FORMATION_DURATION_MS);
+        // Smooth gentle ease-out for organic pixel synthesis
+        const progress = 1.0 - Math.pow(1.0 - rawProgress, 1.35);
+        formationProgressRef.current = progress;
+
+        // Head remains strictly locked in neutral pose during construction
+        cur.yaw = NEUTRAL_YAW;
+        cur.pitch = NEUTRAL_PITCH;
+        tgtRef.current = { yaw: NEUTRAL_YAW, pitch: NEUTRAL_PITCH };
+
+        if (rawProgress >= 1.0) {
+          formationProgressRef.current = 1.0;
+          formationStateRef.current = FORMATION_DONE;
+          animRef.current.mode = MODE_TRACKING;
           scheduleIdleReset();
+          if (onFormationComplete) onFormationComplete();
         }
       } else {
-        // MODE_TRACKING
-        const alpha = 1 - Math.exp(-deltaMs / TAU_MS);
-        cur.yaw   += (tgt.yaw   - cur.yaw)   * alpha;
-        cur.pitch += (tgt.pitch - cur.pitch) * alpha;
+        // ── Interactive Head Tracking Phase ──────────────────────────────────────
+        if (anim.mode === MODE_RETURNING || anim.mode === MODE_HANDOFF) {
+          if (anim.startTs === null) anim.startTs = ts;
+
+          const elapsed = ts - anim.startTs;
+          const t = Math.min(elapsed / anim.duration, 1);
+          const e = easeInOut(t);
+
+          if (anim.mode === MODE_RETURNING) {
+            cur.yaw   = anim.startYaw   + (NEUTRAL_YAW   - anim.startYaw)   * e;
+            cur.pitch = anim.startPitch + (NEUTRAL_PITCH - anim.startPitch) * e;
+          } else {
+            cur.yaw   = anim.startYaw   + (tgt.yaw   - anim.startYaw)   * e;
+            cur.pitch = anim.startPitch + (tgt.pitch - anim.startPitch) * e;
+          }
+
+          if (t >= 1) {
+            if (anim.mode === MODE_RETURNING) {
+              cur.yaw   = NEUTRAL_YAW;
+              cur.pitch = NEUTRAL_PITCH;
+              tgtRef.current = { yaw: NEUTRAL_YAW, pitch: NEUTRAL_PITCH };
+            } else {
+              cur.yaw   = tgt.yaw;
+              cur.pitch = tgt.pitch;
+            }
+            anim.mode = MODE_TRACKING;
+            scheduleIdleReset();
+          }
+        } else {
+          // MODE_TRACKING
+          const alpha = 1 - Math.exp(-deltaMs / TAU_MS);
+          cur.yaw   += (tgt.yaw   - cur.yaw)   * alpha;
+          cur.pitch += (tgt.pitch - cur.pitch) * alpha;
+        }
       }
 
       // Publish smooth continuous pose for background grid distortion
@@ -466,49 +538,57 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
       }
 
       // ── Frame selection ──────────────────────────────────────────────────────
-      const { col: fCol, row: fRow } = yawPitchToFractionalGrid(cur.yaw, cur.pitch);
-      const idx = nearestLoadedIndex(fCol, fRow, loadedSet);
+      let idx;
+      if (isForming) {
+        idx = NEUTRAL_FRAME_INDEX;
+      } else {
+        const { col: fCol, row: fRow } = yawPitchToFractionalGrid(cur.yaw, cur.pitch);
+        idx = nearestLoadedIndex(fCol, fRow, loadedSet);
+      }
       if (idx < 0) return;
 
       const img = getImage(idx);
       if (!img) return;
 
       // ── Synchronize Occlusion Silhouette Mask ──
-      // Uses original frame's alpha channel to render solid #050505 silhouette beneath
-      // the halftone visual canvas. This completely occludes background typography
-      // across the subject without altering the halftone dot appearance or full-colour reveal.
+      // Solid #050505 silhouette beneath halftone canvas blocks background typography
       const maskCanvas = maskCanvasRef.current;
-      if (maskCanvas && idx !== lastMaskIdxRef.current) {
+      if (maskCanvas && (idx !== lastMaskIdxRef.current || isForming)) {
         const mctx = maskCanvas.getContext('2d');
         if (mctx) {
           mctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-          // Draw frame silhouette in solid background color (#050505)
           mctx.save();
+          if (isForming) {
+            // Expand occlusion mask synchronously with cell formation
+            const progress = formationProgressRef.current;
+            const cx = maskCanvas.width * 0.50;
+            const cy = maskCanvas.height * 0.44;
+            const maxR = Math.hypot(maskCanvas.width * 0.50, maskCanvas.height * 0.56);
+            const curR = maxR * Math.min(1.0, progress * 1.15);
+            mctx.beginPath();
+            mctx.arc(cx, cy, Math.max(0, curR), 0, Math.PI * 2);
+            mctx.clip();
+          }
+          // Draw frame silhouette in solid background color (#050505)
           mctx.drawImage(img, 0, 0, maskCanvas.width, maskCanvas.height);
           mctx.globalCompositeOperation = 'source-in';
           mctx.fillStyle = '#050505';
           mctx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
           mctx.restore();
-          lastMaskIdxRef.current = idx;
+          lastMaskIdxRef.current = isForming ? -1 : idx;
         }
       }
 
       // ── Render execution ──
       const pipeline = pipelineRef.current;
-      const pointer = revealPointerRef.current;
 
       if (pipeline && !useFallback2D) {
-        // Keep rendering while head is moving, pointer is inside, or reveal trail is decaying
-        if (pointer.inside || pipeline.presence > 0.002) {
-          trailUntilRef.current = ts + HALFTONE_CONFIG.linger * 1000 + 200;
-        }
-
+        // Redraw when forming, head is moving, or frame changed
         const isHeadMoving = (anim.mode !== MODE_TRACKING) ||
           Math.abs(cur.yaw   - tgt.yaw)   > 0.001 ||
           Math.abs(cur.pitch - tgt.pitch) > 0.001;
 
-        const isTrailActive = ts < trailUntilRef.current;
-        const needsDraw = isHeadMoving || isTrailActive || pointer.inside || (idx !== lastIdxRef.current);
+        const needsDraw = isForming || isHeadMoving || (idx !== lastIdxRef.current);
 
         if (!needsDraw) return;
 
@@ -517,17 +597,22 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
         const viewHeight = Math.max(1, Math.round(rect.height || 512));
         const dpr = canvas.width / viewWidth;
 
-        pipeline.render(
-          img,
-          idx,
-          pointer,
-          dt,
-          viewWidth,
-          viewHeight,
-          canvas.width,
-          canvas.height,
-          dpr
-        );
+        try {
+          pipeline.render(
+            img,
+            idx,
+            viewWidth,
+            viewHeight,
+            canvas.width,
+            canvas.height,
+            dpr,
+            formationProgressRef.current
+          );
+        } catch (renderErr) {
+          console.error('[PortraitCanvas] WebGL2 render error, falling back to 2D:', renderErr);
+          setFallback2D(true);
+          return;
+        }
 
         if (idx !== lastIdxRef.current) {
           lastIdxRef.current = idx;
@@ -543,23 +628,29 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
           Math.abs(cur.yaw   - tgt.yaw)   > 0.001 ||
           Math.abs(cur.pitch - tgt.pitch) > 0.001;
 
-        if (idx === lastIdxRef.current && !isHeadMoving && !pointer.inside) return;
+        if (!isForming && idx === lastIdxRef.current && !isHeadMoving) return;
         lastIdxRef.current = idx;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Base monochrome
-        ctx.filter = 'grayscale(1)';
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        ctx.filter = 'none';
+        if (isForming) {
+          const progress = formationProgressRef.current;
+          const cx = canvas.width * 0.50;
+          const cy = canvas.height * 0.44;
+          const maxR = Math.hypot(canvas.width * 0.50, canvas.height * 0.56);
+          const curR = maxR * progress;
 
-        // Full-colour reveal around pointer
-        if (pointer.inside) {
           ctx.save();
           ctx.beginPath();
-          ctx.arc(pointer.x * (canvas.width / 512), pointer.y * (canvas.height / 512), HALFTONE_CONFIG.revealRadius, 0, Math.PI * 2);
+          ctx.arc(cx, cy, Math.max(0, curR), 0, Math.PI * 2);
           ctx.clip();
+          ctx.filter = 'grayscale(1)';
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          ctx.filter = 'none';
           ctx.restore();
+        } else {
+          ctx.filter = 'grayscale(1)';
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          ctx.filter = 'none';
         }
 
         if (onFrameChange) {
@@ -581,7 +672,7 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
         rafRef.current = null;
       }
     };
-  }, [getImage, loadedSet, isCenterLoaded, onFrameChange, poseRef, useFallback2D, glGeneration]);
+  }, [getImage, loadedSet, isCenterLoaded, onFrameChange, onFormationComplete, poseRef, useFallback2D, glGeneration]);
 
   return (
     <div className="portrait-container">
@@ -601,7 +692,7 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
         height={FRAME_SIZE}
         className="portrait-canvas portrait-visual-canvas"
         onContextMenu={(e) => e.preventDefault()}
-        aria-label="Interactive portrait — move your cursor across the portrait to reveal the photograph beneath the halftone"
+        aria-label="Interactive portrait — move your cursor to track head pose"
       />
     </div>
   );

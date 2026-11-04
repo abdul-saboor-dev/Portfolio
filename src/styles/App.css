@@ -93,6 +93,7 @@
   width: 100%;
   height: 100%;
   display: block;
+  background: transparent !important;
 }
 
 /* ── Portrait Stage (Layer 2 - foreground with native transparent alpha cutout) ── */
@@ -115,18 +116,8 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  /* Smooth continuous fade-in reveal */
-  opacity: 0;
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.portrait-stage.is-revealed {
   opacity: 1;
-}
-
-.portrait-stage.is-hidden {
-  opacity: 0;
-  pointer-events: none;
+  background: transparent !important;
 }
 
 .portrait-container {
@@ -135,6 +126,7 @@
   width: auto;
   aspect-ratio: 1 / 1;
   max-width: min(100vw, 96vh);
+  background: transparent !important;
 }
 
 .portrait-canvas {
@@ -148,6 +140,7 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  background: transparent !important;
 }
 
 /*
