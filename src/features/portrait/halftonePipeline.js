@@ -54,7 +54,7 @@ uniform float uContrast;
 uniform float uBrightness;
 uniform float uInvert;
 uniform float uRough;
-uniform float uFormationProgress;
+uniform float uFormation;
 out vec4 outColor;
 
 const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
@@ -147,28 +147,28 @@ void main() {
     return;
   }
 
-  // Progressive pixel-by-pixel portrait formation
-  if (uFormationProgress < 1.0) {
-    if (uFormationProgress <= 0.0001) {
+  // Formation sequence check (0.0 = fully unformed, 1.0 = fully formed steady-state)
+  if (uFormation < 1.0) {
+    if (uFormation <= 0.0) {
       outColor = vec4(0.0);
       return;
     }
-    vec2 cellCenter = center(p, base);
-    vec2 uv = (cellCenter - uFrame.xy) / uFrame.zw;
-    vec2 cellCoord = floor((cellCenter - uFrame.xy) / uCell);
+    // Discrete cell center in normalized UV space [0..1]
+    vec2 c = center(p, base);
+    vec2 uvCell = (c - uFrame.xy) / uFrame.zw;
 
-    // Deterministic pseudo-random hash per square cell
-    float h = fract(sin(dot(cellCoord, vec2(12.9898, 78.233))) * 43758.5453);
+    // Focal origin at facial center (eyes & bridge of nose)
+    vec2 delta = uvCell - vec2(0.50, 0.38);
+    // Spatially coherent radial distance with slight vertical priority
+    float dist = length(delta * vec2(1.05, 0.95));
 
-    // Radial distance from face center (bridge of nose / eyes: x=0.50, y=0.44)
-    vec2 d = uv - vec2(0.50, 0.44);
-    // Vertical factor 0.90 accounts for oval facial geometry
-    float dist = length(vec2(d.x, d.y * 0.90));
-    float normDist = clamp(dist / 0.58, 0.0, 1.0);
+    // Deterministic cell grid coordinates for pseudo-random jitter
+    vec2 cellGrid = floor((rotate(base) * p) / uCell);
+    float j = (hash(cellGrid) - 0.5) * 0.14;
 
-    // Deterministic ranking: radial center-outward progression with dispersed square pixel appearance
-    float cellRank = normDist * 0.76 + h * 0.24;
-    if (cellRank > uFormationProgress) {
+    // Order key: cells with orderKey <= uFormation are revealed
+    float orderKey = clamp((dist + j) / 0.78, 0.001, 0.999);
+    if (orderKey > uFormation) {
       outColor = vec4(0.0);
       return;
     }
@@ -248,7 +248,7 @@ export class HalftonePipeline {
       'uImage', 'uResolution', 'uView', 'uDpr',
       'uFrame', 'uTexels', 'uShape', 'uCell', 'uAngle',
       'uScale', 'uInk', 'uPaper', 'uContrast', 'uBrightness',
-      'uInvert', 'uRough', 'uFormationProgress'
+      'uInvert', 'uRough', 'uFormation'
     ]);
 
     // Geometry: Full-screen triangle covering [-1, 1] clip space
@@ -267,7 +267,7 @@ export class HalftonePipeline {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 512, 512, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   }
 
@@ -284,7 +284,6 @@ export class HalftonePipeline {
     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, img);
     gl.generateMipmap(gl.TEXTURE_2D);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     this.lastUploadedIdx = idx;
   }
 
@@ -320,7 +319,7 @@ export class HalftonePipeline {
     gl.uniform1f(this.viewUniforms.uBrightness, HALFTONE_CONFIG.brightness);
     gl.uniform1f(this.viewUniforms.uInvert, HALFTONE_CONFIG.invert ? 1 : 0);
     gl.uniform1f(this.viewUniforms.uRough, HALFTONE_CONFIG.roughness);
-    gl.uniform1f(this.viewUniforms.uFormationProgress, formationProgress);
+    gl.uniform1f(this.viewUniforms.uFormation, formationProgress);
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);

@@ -36,12 +36,23 @@ export default function App() {
 
   const { getImage, loadedSet, isCenterLoaded } = useFramePreloader();
 
-  // Intro coordination state: name typography preloader completion
+  // Intro sequence state machine:
+  // 1. Typography pixel construction: active initially
+  // 2. Portrait pixel formation: begins strictly when typography finishes AND neutral frame 189 is loaded
+  // 3. Interactive hero: unlocked once portrait pixel formation completes
   const [heroTypoDone, setHeroTypoDone] = useState(prefersReducedMotion);
+  const [portraitFormed, setPortraitFormed] = useState(prefersReducedMotion);
 
   const handleHeroReady = useCallback(() => {
     setHeroTypoDone(true);
   }, []);
+
+  const handleFormationComplete = useCallback(() => {
+    setPortraitFormed(true);
+  }, []);
+
+  // Formation starts when typography is completely done and neutral frame 189 is loaded
+  const isFormationActive = (heroTypoDone && isCenterLoaded) || prefersReducedMotion;
 
   const handleFrameChange = useCallback((_info) => {
     // Underlying frame info callback preserved
@@ -57,7 +68,7 @@ export default function App() {
 
       {/* ── Centerpiece Portrait Stage ── */}
       <div
-        className="portrait-stage"
+        className={`portrait-stage ${portraitFormed ? 'is-interactive' : 'is-forming'}`}
         onContextMenu={(e) => e.preventDefault()}
       >
         <PortraitCanvas
@@ -66,9 +77,10 @@ export default function App() {
           getImage={getImage}
           loadedSet={loadedSet}
           isCenterLoaded={isCenterLoaded}
-          heroTypoDone={heroTypoDone}
-          prefersReducedMotion={prefersReducedMotion}
           onFrameChange={handleFrameChange}
+          formationActive={isFormationActive}
+          onFormationComplete={handleFormationComplete}
+          prefersReducedMotion={prefersReducedMotion}
         />
       </div>
     </div>
