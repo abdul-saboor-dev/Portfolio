@@ -83,6 +83,8 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
   ref,
 ) {
   const canvasRef = useRef(null);
+  const maskCanvasRef = useRef(null);
+  const lastMaskIdxRef = useRef(-1);
   const rafRef    = useRef(null);
 
   // Fallback to 2D canvas if WebGL2 is not supported or fails
@@ -279,6 +281,7 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
   // ── Canvas resize & backing-store scaling ───────────────────────────────────
   const updateCanvasSize = useCallback(() => {
     const canvas = canvasRef.current;
+    const maskCanvas = maskCanvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
@@ -302,6 +305,12 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
       }
 
       lastIdxRef.current = -1;
+    }
+
+    if (maskCanvas && (maskCanvas.width !== targetSize || maskCanvas.height !== targetSize)) {
+      maskCanvas.width = targetSize;
+      maskCanvas.height = targetSize;
+      lastMaskIdxRef.current = -1;
     }
   }, [useFallback2D]);
 
@@ -464,7 +473,27 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
       const img = getImage(idx);
       if (!img) return;
 
-      // ── Render execution ─────────────────────────────────────────────────────
+      // ── Synchronize Occlusion Silhouette Mask ──
+      // Uses original frame's alpha channel to render solid #050505 silhouette beneath
+      // the halftone visual canvas. This completely occludes background typography
+      // across the subject without altering the halftone dot appearance or full-colour reveal.
+      const maskCanvas = maskCanvasRef.current;
+      if (maskCanvas && idx !== lastMaskIdxRef.current) {
+        const mctx = maskCanvas.getContext('2d');
+        if (mctx) {
+          mctx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+          // Draw frame silhouette in solid background color (#050505)
+          mctx.save();
+          mctx.drawImage(img, 0, 0, maskCanvas.width, maskCanvas.height);
+          mctx.globalCompositeOperation = 'source-in';
+          mctx.fillStyle = '#050505';
+          mctx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+          mctx.restore();
+          lastMaskIdxRef.current = idx;
+        }
+      }
+
+      // ── Render execution ──
       const pipeline = pipelineRef.current;
       const pointer = revealPointerRef.current;
 
@@ -555,15 +584,26 @@ const PortraitCanvas = forwardRef(function PortraitCanvas(
   }, [getImage, loadedSet, isCenterLoaded, onFrameChange, poseRef, useFallback2D, glGeneration]);
 
   return (
-    <canvas
-      key={useFallback2D ? 'portrait-canvas-2d' : 'portrait-canvas-webgl'}
-      ref={canvasRef}
-      width={FRAME_SIZE}
-      height={FRAME_SIZE}
-      className="portrait-canvas"
-      onContextMenu={(e) => e.preventDefault()}
-      aria-label="Interactive portrait — move your cursor across the portrait to reveal the photograph beneath the halftone"
-    />
+    <div className="portrait-container">
+      {/* Occlusion silhouette mask — painted synchronously with current frame to block typography */}
+      <canvas
+        ref={maskCanvasRef}
+        width={FRAME_SIZE}
+        height={FRAME_SIZE}
+        className="portrait-canvas portrait-occlusion-mask"
+        aria-hidden="true"
+      />
+      {/* Interactive WebGL2 Halftone canvas */}
+      <canvas
+        key={useFallback2D ? 'portrait-canvas-2d' : 'portrait-canvas-webgl'}
+        ref={canvasRef}
+        width={FRAME_SIZE}
+        height={FRAME_SIZE}
+        className="portrait-canvas portrait-visual-canvas"
+        onContextMenu={(e) => e.preventDefault()}
+        aria-label="Interactive portrait — move your cursor across the portrait to reveal the photograph beneath the halftone"
+      />
+    </div>
   );
 });
 
