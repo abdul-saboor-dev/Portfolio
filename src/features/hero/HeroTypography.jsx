@@ -180,6 +180,7 @@ const STEP_INTERVAL_MS = 3.5;
 export default function HeroTypography({
   onHeroReady,
   prefersReducedMotion = false,
+  active = true,
 }) {
   const canvasRef1 = useRef(null);
   const containerRef1 = useRef(null);
@@ -252,6 +253,7 @@ export default function HeroTypography({
   }, [getOrderedPoints]);
 
   useEffect(() => {
+    if (!active) return;
     const c1 = containerRef1.current;
     const c2 = containerRef2.current;
     const canvas1 = canvasRef1.current;
@@ -389,7 +391,7 @@ export default function HeroTypography({
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       animStateRef.current.active = false;
     };
-  }, [buildInterleavedSchedule, prefersReducedMotion, onHeroReady]);
+  }, [buildInterleavedSchedule, prefersReducedMotion, onHeroReady, active]);
 
   return (
     <div className="hero-typography-layer" aria-label="Abdul Saboor — Portfolio">

@@ -18,6 +18,7 @@ export function useFramePreloader() {
   const imagesRef = useRef(new Array(COLS * ROWS).fill(null));
   const loadedSetRef = useRef(new Set());
   const [loadedCount, setLoadedCount] = useState(0);
+  const [centerLoadError, setCenterLoadError] = useState(false);
 
   const loadedCountRef = useRef(0);
   const queueRef = useRef([]);
@@ -54,6 +55,46 @@ export function useFramePreloader() {
 
     // Tier 1: Load center frame immediately
     const centerImg = new Image();
+    let centerHandled = false;
+    activeRef.current++;
+
+    const onCenterSuccess = () => {
+      if (centerHandled) return;
+      centerHandled = true;
+      imagesRef.current[CENTER_IDX] = centerImg;
+      loadedSetRef.current.add(CENTER_IDX);
+      loadedCountRef.current++;
+      activeRef.current--;
+      setLoadedCount(loadedCountRef.current);
+      setCenterLoadError(false);
+      processQueue();
+    };
+
+    centerImg.onload = onCenterSuccess;
+    centerImg.onerror = () => {
+      if (centerHandled) return;
+      centerHandled = true;
+      activeRef.current--;
+      setCenterLoadError(true);
+      processQueue();
+    };
+
+    const centerCol = CENTER_IDX % COLS;
+    const centerRow = Math.floor(CENTER_IDX / COLS);
+    centerImg.src = getFrameUrl(centerCol, centerRow);
+
+    if (centerImg.complete && centerImg.naturalWidth > 0) {
+      onCenterSuccess();
+    }
+
+    // Enqueue remaining frames in radial order (skip center)
+    queueRef.current = preloadOrder.filter(idx => idx !== CENTER_IDX);
+    // Don't start queue yet — wait for center to load and call processQueue
+  }, [processQueue]);
+
+  const retryCenter = useCallback(() => {
+    setCenterLoadError(false);
+    const centerImg = new Image();
     activeRef.current++;
     centerImg.onload = () => {
       imagesRef.current[CENTER_IDX] = centerImg;
@@ -61,19 +102,17 @@ export function useFramePreloader() {
       loadedCountRef.current++;
       activeRef.current--;
       setLoadedCount(loadedCountRef.current);
+      setCenterLoadError(false);
       processQueue();
     };
     centerImg.onerror = () => {
       activeRef.current--;
+      setCenterLoadError(true);
       processQueue();
     };
     const centerCol = CENTER_IDX % COLS;
     const centerRow = Math.floor(CENTER_IDX / COLS);
     centerImg.src = getFrameUrl(centerCol, centerRow);
-
-    // Enqueue remaining frames in radial order (skip center)
-    queueRef.current = preloadOrder.filter(idx => idx !== CENTER_IDX);
-    // Don't start queue yet — wait for center to load and call processQueue
   }, [processQueue]);
 
   const getImage = useCallback((idx) => {
@@ -86,5 +125,7 @@ export function useFramePreloader() {
     loadedCount,
     total: COLS * ROWS,
     isCenterLoaded: loadedSetRef.current.has(CENTER_IDX),
+    centerLoadError,
+    retryCenter,
   };
 }
