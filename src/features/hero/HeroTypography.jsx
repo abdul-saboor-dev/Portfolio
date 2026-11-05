@@ -11,6 +11,12 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react';
+import {
+  GLYPH_COLS,
+  GLYPH_GAP,
+  computeCellSize,
+  resolveHeroComposition,
+} from './heroComposition.js';
 
 // Character streams
 const WORD1_CHARS = ['A', 'B', 'D', 'U', 'L'];
@@ -166,12 +172,9 @@ const TALL_PIXEL_FONT = {
   ],
 };
 
-const GLYPH_COLS = 6;
-const GLYPH_ROWS = 16;
-const GLYPH_GAP = 2; // in grid cells
-
-// ABDUL grid width = 5 * 6 + 4 * 2 = 38
-// SABOOR grid width = 6 * 6 + 5 * 2 = 46
+// Grid geometry (glyph 6 x 16, 2-cell letter gap) and the word widths in grid
+// cells come from heroComposition.js so the responsive decision and the canvas
+// renderer always agree.
 
 // Step interval in milliseconds for drawing each single scheduled pixel
 // 3.5ms * 682 pixels = ~2.38 seconds total
@@ -252,6 +255,21 @@ export default function HeroTypography({
     return schedule;
   }, [getOrderedPoints]);
 
+  // The composition decision also styles the portrait stage, so it stays current
+  // even while this component's animation is still inactive behind the loader.
+  useEffect(() => {
+    resolveHeroComposition();
+    const onViewportChange = () => {
+      resolveHeroComposition();
+    };
+    window.addEventListener('resize', onViewportChange);
+    window.addEventListener('orientationchange', onViewportChange);
+    return () => {
+      window.removeEventListener('resize', onViewportChange);
+      window.removeEventListener('orientationchange', onViewportChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (!active) return;
     const c1 = containerRef1.current;
@@ -261,6 +279,10 @@ export default function HeroTypography({
     if (!c1 || !c2 || !canvas1 || !canvas2) return;
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    // Publish diagonal vs stacked before measuring, so the boxes read here are
+    // the ones the CSS for the chosen composition actually produced.
+    resolveHeroComposition();
 
     const r1 = c1.getBoundingClientRect();
     const r2 = c2.getBoundingClientRect();
@@ -275,14 +297,8 @@ export default function HeroTypography({
     canvas2.width = Math.round(w2 * dpr);
     canvas2.height = Math.round(h2 * dpr);
 
-    // Compute square cell size:
-    // ABDUL has 38 grid cols and 16 rows
-    const cellSize1 = Math.floor(Math.min(w1 / 38, h1 / GLYPH_ROWS));
-    // SABOOR has 46 grid cols and 16 rows
-    const cellSize2 = Math.floor(Math.min(w2 / 46, h2 / GLYPH_ROWS));
-
-    // Ensure cell sizes are equal and individual pixels are strictly square
-    let currentCellSize = Math.max(3, Math.min(cellSize1, cellSize2));
+    // One shared, integer cell for both words keeps every pixel strictly square.
+    let currentCellSize = computeCellSize({ width: w1, height: h1 }, { width: w2, height: h2 });
 
     const schedule = buildInterleavedSchedule();
 
@@ -302,19 +318,22 @@ export default function HeroTypography({
     };
 
     const handleResize = () => {
-      const nw1 = Math.max(1, Math.round(c1.getBoundingClientRect().width));
-      const nh1 = Math.max(1, Math.round(c1.getBoundingClientRect().height));
-      const nw2 = Math.max(1, Math.round(c2.getBoundingClientRect().width));
-      const nh2 = Math.max(1, Math.round(c2.getBoundingClientRect().height));
+      resolveHeroComposition();
+
+      const nr1 = c1.getBoundingClientRect();
+      const nr2 = c2.getBoundingClientRect();
+
+      const nw1 = Math.max(1, Math.round(nr1.width));
+      const nh1 = Math.max(1, Math.round(nr1.height));
+      const nw2 = Math.max(1, Math.round(nr2.width));
+      const nh2 = Math.max(1, Math.round(nr2.height));
 
       canvas1.width = Math.round(nw1 * dpr);
       canvas1.height = Math.round(nh1 * dpr);
       canvas2.width = Math.round(nw2 * dpr);
       canvas2.height = Math.round(nh2 * dpr);
 
-      const nCell1 = Math.floor(Math.min(nw1 / 38, nh1 / GLYPH_ROWS));
-      const nCell2 = Math.floor(Math.min(nw2 / 46, nh2 / GLYPH_ROWS));
-      currentCellSize = Math.max(3, Math.min(nCell1, nCell2));
+      currentCellSize = computeCellSize({ width: nw1, height: nh1 }, { width: nw2, height: nh2 });
 
       ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
       ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
