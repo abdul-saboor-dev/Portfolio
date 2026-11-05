@@ -190,13 +190,6 @@ export default function App() {
     });
   }, []);
 
-  // Dynamic Status Text reflecting genuine loading stages
-  const getStatusText = useCallback(() => {
-    if (!fontsReady) return 'INITIALIZING EXPERIENCE';
-    if (!isCenterLoaded) return 'LOADING PORTRAIT ASSETS';
-    return 'PREPARING INTERFACE';
-  }, [fontsReady, isCenterLoaded]);
-
   // ── Sequence Continuation ──
   // 1. ABDUL SABOOR typography: starts strictly after dinosaur departure completes
   // 2. Portrait pixel formation: begins strictly when typography finishes AND neutral frame 189 is loaded
@@ -233,7 +226,6 @@ export default function App() {
       {isDinosaurActive && (
         <StartupLoader
           phase={startupState}
-          statusText={getStatusText()}
           error={centerLoadError}
           onRetry={retryCenter}
           onEntranceComplete={handleEntranceComplete}

@@ -16,7 +16,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { footstepAudio } from './footstepAudio.js';
 import { DINO_ENTRANCE_MS, entranceOffsetMs } from './startupTiming.js';
 import './StartupLoader.css';
-
 // 10 pre-configured directional square pixel particles kicked up near rear feet/tail
 const DUST_PARTICLES = [
   { id: 1,  x: -6,  y: 84, size: 4, dx: -45, dy: -8,  delay: '0.04s' },
@@ -35,9 +34,14 @@ const DUST_PARTICLES = [
 const DUST_SETTLE_MS = 260;
 const EXIT_FALLBACK_MS = 900;
 
+// The run sprite cycles its three poses every 0.3s (0.14s while sprinting), so a
+// foot lands twice per cycle. Tapping at exactly that cadence keeps the audio
+// locked to the alternating-leg animation instead of an unrelated metronome.
+const FOOTSTEP_RUN_MS = 150;
+const FOOTSTEP_SPRINT_MS = 70;
+
 export default function StartupLoader({
   phase = 'ENTERING',
-  statusText = 'INITIALIZING EXPERIENCE',
   error = false,
   onRetry,
   onEntranceComplete,
@@ -45,7 +49,6 @@ export default function StartupLoader({
   onDustFinished,
   prefersReducedMotion = false,
 }) {
-  const [soundEnabled, setSoundEnabled] = useState(false);
   const dinoContainerRef = useRef(null);
   const departedCalledRef = useRef(false);
   const dustCalledRef = useRef(false);
@@ -76,15 +79,19 @@ export default function StartupLoader({
     onDustFinished?.();
   }, [onDustFinished]);
 
-  // 1. Synchronized footstep audio loop (silent until the visitor enables sound)
+  // 1. Synchronized footstep audio loop. Sound is preferred on by default but
+  //    stays silent until a real gesture unlocks the AudioContext, so nothing
+  //    plays on load and no control is needed to hear it.
   useEffect(() => {
     if (prefersReducedMotion) return undefined;
 
+    footstepAudio.armOnFirstInteraction();
+
     let interval = null;
     if (phase === 'ENTERING' || phase === 'WAITING') {
-      interval = setInterval(() => footstepAudio.playFootstep(1.0), 100);
+      interval = setInterval(() => footstepAudio.playFootstep(1.0), FOOTSTEP_RUN_MS);
     } else if (phase === 'EXITING') {
-      interval = setInterval(() => footstepAudio.playFootstep(1.25), 65);
+      interval = setInterval(() => footstepAudio.playFootstep(1.25), FOOTSTEP_SPRINT_MS);
     }
 
     const tick1 = phase === 'EXITING' ? setTimeout(() => footstepAudio.playDustTick(), 160) : null;
@@ -146,12 +153,6 @@ export default function StartupLoader({
     return () => clearTimeout(timer);
   }, [phase, reportDustFinished]);
 
-  // Audio unlocks only from an explicit click, honouring autoplay policies.
-  const handleToggleSound = useCallback(async () => {
-    const active = await footstepAudio.toggleAudio();
-    setSoundEnabled(active);
-  }, []);
-
   const isEntering = phase === 'ENTERING' && !entranceSettled && !prefersReducedMotion;
   const isExiting = phase === 'EXITING';
   const isDustFinishing = phase === 'DUST_FINISHING';
@@ -200,13 +201,8 @@ export default function StartupLoader({
           </div>
         </div>
 
-        {/* Dynamic Status Display or Error Action */}
-        {!error ? (
-          <div className={`startup-status-container ${isLeavingOrLeft ? 'is-leaving' : ''}`}>
-            <span className="startup-status-dot" aria-hidden="true" />
-            <span className="startup-status-text">{statusText}</span>
-          </div>
-        ) : (
+        {/* Error Action only — loading progress is conveyed by the dinosaur itself */}
+        {error && (
           <div className="startup-error-container">
             <span className="startup-error-msg">COULD NOT LOAD PORTRAIT ASSETS</span>
             {onRetry && (
@@ -222,29 +218,6 @@ export default function StartupLoader({
           </div>
         )}
       </div>
-
-      {/* Understated Accessible Sound Toggle Button */}
-      <button
-        type="button"
-        className={`startup-sound-toggle ${soundEnabled ? 'is-active' : ''} ${isLeavingOrLeft ? 'is-leaving' : ''}`}
-        onClick={handleToggleSound}
-        aria-label={soundEnabled ? 'Mute startup sound' : 'Enable startup footstep sounds'}
-        aria-pressed={soundEnabled}
-        title={soundEnabled ? 'Sound: On' : 'Sound: Off'}
-      >
-        <svg
-          className="startup-sound-icon"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          {soundEnabled ? (
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-          ) : (
-            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-          )}
-        </svg>
-        <span>{soundEnabled ? 'SOUND ON' : 'SOUND OFF'}</span>
-      </button>
     </aside>
   );
 }
