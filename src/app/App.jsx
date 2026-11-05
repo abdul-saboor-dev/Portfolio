@@ -3,28 +3,28 @@
  * Abdul Saboor — Interactive Hero & Portfolio Application
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import PortraitCanvas from '../features/portrait/PortraitCanvas.jsx';
 import HeroTypography from '../features/hero/HeroTypography.jsx';
 import StartupLoader from '../features/startup/StartupLoader.jsx';
 import { useFramePreloader } from '../features/portrait/useFramePreloader.js';
 import { NEUTRAL_YAW, NEUTRAL_PITCH } from '../features/portrait/frameData.js';
+import {
+  LOADER_THRESHOLD_MS,
+  MIN_WAITING_RUN_MS,
+  elapsedSinceBootMs,
+} from '../features/startup/startupTiming.js';
 import '../styles/App.css';
 
-// 5-State Explicit Startup Lifecycle
+// 6-State Explicit Startup Lifecycle
 const STARTUP_LIFECYCLE = {
   HIDDEN: 'HIDDEN',
+  ENTERING: 'ENTERING',
   WAITING: 'WAITING',
   EXITING: 'EXITING',
   DUST_FINISHING: 'DUST_FINISHING',
   COMPLETED: 'COMPLETED',
 };
-
-// 800ms threshold: if startup completes within 800ms (good internet), skip dinosaur entirely
-const LOADER_THRESHOLD_MS = 800;
-
-// When dinosaur appears, it stays for at least 3 seconds minimum, and maximum according to network loading
-const MIN_WAITING_RUN_MS = 3000;
 
 function removeStartupShell() {
   if (typeof document !== 'undefined') {
@@ -85,95 +85,93 @@ export default function App() {
 
   const isEssentialReady = fontsReady && isCenterLoaded;
 
-  // ── 5-State Explicit Lifecycle State Machine ──
+  // ── 6-State Explicit Lifecycle State Machine ──
   const [startupState, setStartupState] = useState(() => {
     if (prefersReducedMotion) return STARTUP_LIFECYCLE.COMPLETED;
-    const now = typeof performance !== 'undefined' ? performance.now() : 0;
-    if (now >= LOADER_THRESHOLD_MS) {
-      return STARTUP_LIFECYCLE.WAITING;
-    }
     return STARTUP_LIFECYCLE.HIDDEN;
   });
 
-  const dinoVisibleTimeRef = useRef(null);
-  const thresholdTimerRef = useRef(null);
-  const minRunTimerRef = useRef(null);
+  const essentialReadyRef = useRef(false);
+  const dinoArrivedAtRef = useRef(null);
+  const exitTimerRef = useRef(null);
 
-  // If initial state was WAITING or COMPLETED on mount, clean up the shell
   useEffect(() => {
-    if (startupState === STARTUP_LIFECYCLE.WAITING) {
-      if (!dinoVisibleTimeRef.current) {
-        dinoVisibleTimeRef.current = performance.now();
-      }
-      removeStartupShell();
-    } else if (startupState === STARTUP_LIFECYCLE.COMPLETED) {
-      removeStartupShell();
-    }
+    essentialReadyRef.current = isEssentialReady;
+  }, [isEssentialReady]);
+
+  // Runs in the same commit that mounts the loader and before paint, so the
+  // pre-React shell dinosaur and the React dinosaur swap without a blank frame.
+  useLayoutEffect(() => {
+    if (startupState !== STARTUP_LIFECYCLE.HIDDEN) removeStartupShell();
   }, [startupState]);
 
-  // 1. Threshold timer for HIDDEN state (800ms from navigation start)
+  const clearExitTimer = useCallback(() => {
+    if (exitTimerRef.current !== null) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+  }, []);
+
+  // Readiness never cuts the sequence short: the minimum waiting period is
+  // measured from the moment the dinosaur reaches the centre.
+  const scheduleExit = useCallback(() => {
+    if (exitTimerRef.current !== null) return;
+    const arrivedAt = dinoArrivedAtRef.current;
+    if (arrivedAt === null) return;
+
+    const remaining = Math.max(0, MIN_WAITING_RUN_MS - (performance.now() - arrivedAt));
+    exitTimerRef.current = setTimeout(() => {
+      exitTimerRef.current = null;
+      setStartupState((prev) =>
+        prev === STARTUP_LIFECYCLE.WAITING ? STARTUP_LIFECYCLE.EXITING : prev,
+      );
+    }, remaining);
+  }, []);
+
+  // 1. Visibility threshold: ready in time → no dinosaur at all, otherwise run the entrance.
   useEffect(() => {
     if (startupState !== STARTUP_LIFECYCLE.HIDDEN) return;
 
-    const now = typeof performance !== 'undefined' ? performance.now() : 0;
-    const remaining = Math.max(0, LOADER_THRESHOLD_MS - now);
-
-    thresholdTimerRef.current = setTimeout(() => {
-      setStartupState((prev) => {
-        if (prev !== STARTUP_LIFECYCLE.HIDDEN) return prev;
-        if (isEssentialReady) {
-          removeStartupShell();
-          return STARTUP_LIFECYCLE.COMPLETED;
-        }
-        removeStartupShell();
-        dinoVisibleTimeRef.current = performance.now();
-        return STARTUP_LIFECYCLE.WAITING;
-      });
+    const remaining = Math.max(0, LOADER_THRESHOLD_MS - elapsedSinceBootMs());
+    const timer = setTimeout(() => {
+      setStartupState(
+        essentialReadyRef.current ? STARTUP_LIFECYCLE.COMPLETED : STARTUP_LIFECYCLE.ENTERING,
+      );
     }, remaining);
 
-    return () => {
-      if (thresholdTimerRef.current) clearTimeout(thresholdTimerRef.current);
-    };
-  }, [startupState, isEssentialReady]);
+    return () => clearTimeout(timer);
+  }, [startupState]);
 
-  // 2. Readiness handler: transitions from HIDDEN -> COMPLETED (fast) or WAITING -> EXITING (visible)
+  // 2. Readiness handler: fast path skips the loader, visible path must finish its sequence.
   useEffect(() => {
     if (!isEssentialReady) return;
 
     if (startupState === STARTUP_LIFECYCLE.HIDDEN) {
-      // Ready within 800ms (good internet): skip visible loader entirely
-      if (thresholdTimerRef.current) clearTimeout(thresholdTimerRef.current);
-      removeStartupShell();
-      queueMicrotask(() => {
-        setStartupState(STARTUP_LIFECYCLE.COMPLETED);
-      });
+      queueMicrotask(() => setStartupState(STARTUP_LIFECYCLE.COMPLETED));
     } else if (startupState === STARTUP_LIFECYCLE.WAITING) {
-      // Dinosaur is visible: MUST complete entire animation sequence
-      if (prefersReducedMotion) {
-        queueMicrotask(() => {
-          setStartupState(STARTUP_LIFECYCLE.COMPLETED);
-        });
-        return;
-      }
-
-      const visibleSince = dinoVisibleTimeRef.current || performance.now();
-      const elapsedVisible = performance.now() - visibleSince;
-      const remainingRun = Math.max(0, MIN_WAITING_RUN_MS - elapsedVisible);
-
-      if (minRunTimerRef.current) clearTimeout(minRunTimerRef.current);
-      minRunTimerRef.current = setTimeout(() => {
-        setStartupState(STARTUP_LIFECYCLE.EXITING);
-      }, remainingRun);
+      scheduleExit();
     }
-  }, [isEssentialReady, startupState, prefersReducedMotion]);
+    // ENTERING: the centre-arrival effect schedules the exit instead.
+  }, [isEssentialReady, startupState, scheduleExit]);
 
-  useEffect(() => {
-    return () => {
-      if (minRunTimerRef.current) clearTimeout(minRunTimerRef.current);
-    };
+  // 3. Centre arrival starts the minimum waiting period.
+  const handleEntranceComplete = useCallback(() => {
+    setStartupState((prev) =>
+      prev === STARTUP_LIFECYCLE.ENTERING ? STARTUP_LIFECYCLE.WAITING : prev,
+    );
   }, []);
 
-  // 3. Departure & Dust Lifecycle Handlers
+  useEffect(() => {
+    if (startupState !== STARTUP_LIFECYCLE.WAITING) return;
+    if (dinoArrivedAtRef.current === null) {
+      dinoArrivedAtRef.current = performance.now();
+    }
+    if (essentialReadyRef.current) scheduleExit();
+  }, [startupState, scheduleExit]);
+
+  useEffect(() => clearExitTimer, [clearExitTimer]);
+
+  // 4. Departure & Dust Lifecycle Handlers
   const handleDinosaurDeparted = useCallback(() => {
     setStartupState((prev) => {
       if (prev === STARTUP_LIFECYCLE.EXITING) {
@@ -222,6 +220,7 @@ export default function App() {
   }, []);
 
   const isDinosaurActive =
+    startupState === STARTUP_LIFECYCLE.ENTERING ||
     startupState === STARTUP_LIFECYCLE.WAITING ||
     startupState === STARTUP_LIFECYCLE.EXITING ||
     startupState === STARTUP_LIFECYCLE.DUST_FINISHING;
@@ -230,13 +229,14 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* ── Phase 1-7: Uiverse Dinosaurio Startup Experience ── */}
+      {/* ── Startup: Uiverse Dinosaur Entrance → Waiting → Departure → Dust ── */}
       {isDinosaurActive && (
         <StartupLoader
           phase={startupState}
           statusText={getStatusText()}
           error={centerLoadError}
           onRetry={retryCenter}
+          onEntranceComplete={handleEntranceComplete}
           onDinosaurDeparted={handleDinosaurDeparted}
           onDustFinished={handleDustFinished}
           prefersReducedMotion={prefersReducedMotion}

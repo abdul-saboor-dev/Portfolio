@@ -7,10 +7,16 @@
     <meta name="author" content="Abdul Saboor" />
     <meta name="description" content="Portfolio of Abdul Saboor — Creative Technologist & Engineer." />
     <title>Abdul Saboor — Portfolio</title>
+    <script>
+      // Shared clock origin for the startup sequence: the inline shell animates from
+      // this instant and React resumes the same entrance mid-flight.
+      window.__PORTFOLIO_BOOT__ = performance.now();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <link rel="preload" as="image" href="/frames/frame_0189.webp" type="image/webp" fetchpriority="high" />
+    <!-- Neutral portrait frame 189 (col 9 / row 9). Must match FRAME_FILENAMES[189] in src/features/portrait/frameList.generated.js -->
+    <link rel="preload" as="image" href="/frames/Abdul-Saboor_189_9_9_yaw-1.1_pitch-1.1_px-0.8_py0.8.webp" type="image/webp" fetchpriority="high" />
     <style>
       /* Pre-React Loading Shell — Zero White Flash & Uiverse Dinosaur */
       /* Original component: 20essentials (https://github.com/20essentials/project-000-132) */
@@ -48,6 +54,26 @@
         width: 96px;
         height: 96px;
       }
+      /*
+       * Entrance mirrors StartupLoader.css exactly: 0.8s appearance threshold and
+       * 0.85s left-to-centre travel, so React can resume it mid-flight by reusing
+       * this timing with a negative animation-delay.
+       */
+      .shell-dino-container {
+        position: relative;
+        width: 96px;
+        height: 96px;
+        will-change: transform;
+        animation: shell-dino-entrance 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) 0.8s both;
+      }
+      @keyframes shell-dino-entrance {
+        0% {
+          transform: translateX(calc(-50vw - 140px));
+        }
+        100% {
+          transform: translateX(0);
+        }
+      }
       .shell-dino-pixel {
         width: 4px;
         height: 4px;
@@ -69,14 +95,14 @@
         }
       }
       .shell-status {
-        margin-top: 28px;
+        margin-top: 32px;
         display: flex;
         align-items: center;
         gap: 8px;
         font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
         font-size: 11px;
         letter-spacing: 0.16em;
-        color: rgba(255, 255, 255, 0.45);
+        color: rgba(255, 255, 255, 0.5);
         text-transform: uppercase;
       }
       .shell-dot {
@@ -90,9 +116,18 @@
         0%, 100% { opacity: 0.3; transform: scale(0.85); }
         50% { opacity: 1; transform: scale(1.15); }
       }
+      @media (max-width: 600px) {
+        .shell-dino-stage {
+          transform: scale(0.9);
+        }
+      }
       @media (prefers-reduced-motion: reduce) {
         .shell-dino-pixel {
           animation: none !important;
+        }
+        .shell-dino-container {
+          animation: none !important;
+          transform: none !important;
         }
         .shell-dot {
           animation: none !important;
@@ -105,7 +140,9 @@
     <!-- Pre-React Loading Shell (removed seamlessly by StartupLoader) -->
     <div id="startup-shell" aria-hidden="true">
       <div class="shell-dino-stage">
-        <div class="shell-dino-pixel"></div>
+        <div class="shell-dino-container">
+          <div class="shell-dino-pixel"></div>
+        </div>
       </div>
       <div class="shell-status">
         <span class="shell-dot"></span>

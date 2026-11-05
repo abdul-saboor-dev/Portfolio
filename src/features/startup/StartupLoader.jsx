@@ -4,15 +4,17 @@
  * Uiverse Dinosaurio Startup Loading Experience.
  * Original component by 20essentials (https://github.com/20essentials/project-000-132 / https://uiverse.io/20essentials/dry-mayfly-12)
  *
- * Runs in place while essential resources load, accelerates to the right with
- * directional pixel dust upon readiness, and seamlessly hands off to the
- * existing portfolio introduction.
+ * Runs in from the left edge to the centre, runs in place while essential
+ * resources load, accelerates off the right edge with directional pixel dust
+ * upon readiness, and hands off to the existing portfolio introduction.
  *
- * Lifecycle: WAITING -> EXITING -> DUST_FINISHING -> (unmounted upon COMPLETED)
+ * Lifecycle: ENTERING -> WAITING -> EXITING -> DUST_FINISHING -> (unmounted upon COMPLETED)
+ * Phase changes are driven by animationend/transitionend, never by a bare timer.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { footstepAudio } from './footstepAudio.js';
+import { DINO_ENTRANCE_MS, entranceOffsetMs } from './startupTiming.js';
 import './StartupLoader.css';
 
 // 10 pre-configured directional square pixel particles kicked up near rear feet/tail
@@ -29,119 +31,135 @@ const DUST_PARTICLES = [
   { id: 10, x: -15, y: 92, size: 4, dx: -46, dy: -4,  delay: '0.18s' },
 ];
 
+// Longest dust particle: 0.5s animation + 0.28s stagger
+const DUST_SETTLE_MS = 260;
+const EXIT_FALLBACK_MS = 900;
+
 export default function StartupLoader({
-  phase = 'WAITING',
+  phase = 'ENTERING',
   statusText = 'INITIALIZING EXPERIENCE',
   error = false,
   onRetry,
+  onEntranceComplete,
   onDinosaurDeparted,
   onDustFinished,
   prefersReducedMotion = false,
 }) {
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const footstepIntervalRef = useRef(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const dinoContainerRef = useRef(null);
   const departedCalledRef = useRef(false);
   const dustCalledRef = useRef(false);
+  const entranceCalledRef = useRef(false);
+  const dustEndCountRef = useRef(0);
 
-  // Auto-enable audio on mount
-  useEffect(() => {
-    footstepAudio.enableAudio().then((active) => {
-      setSoundEnabled(active);
-    });
-  }, []);
+  // Frozen at mount: how far the pre-React shell entrance had already travelled,
+  // so the React dinosaur resumes mid-flight instead of restarting or skipping it.
+  const [entranceOffset] = useState(() => entranceOffsetMs());
+  const entranceSettled = entranceOffset >= DINO_ENTRANCE_MS;
 
-  // 1. Synchronized footstep audio loop
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      if (footstepIntervalRef.current) clearInterval(footstepIntervalRef.current);
-      return;
-    }
+  const reportEntranceComplete = useCallback(() => {
+    if (entranceCalledRef.current) return;
+    entranceCalledRef.current = true;
+    onEntranceComplete?.();
+  }, [onEntranceComplete]);
 
-    if (phase === 'WAITING') {
-      // Steady running cadence: alternating legs every 100ms
-      footstepIntervalRef.current = setInterval(() => {
-        footstepAudio.playFootstep(1.0);
-      }, 100);
-    } else if (phase === 'EXITING') {
-      // Faster cadence during departure sprint: 65ms
-      if (footstepIntervalRef.current) clearInterval(footstepIntervalRef.current);
-      footstepIntervalRef.current = setInterval(() => {
-        footstepAudio.playFootstep(1.25);
-      }, 65);
-
-      // 2 subtle digital ticks when pixel dust scatters
-      const t1 = setTimeout(() => footstepAudio.playDustTick(), 160);
-      const t2 = setTimeout(() => footstepAudio.playDustTick(), 280);
-
-      return () => {
-        if (footstepIntervalRef.current) clearInterval(footstepIntervalRef.current);
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    } else if (phase === 'DUST_FINISHING') {
-      // Dinosaur has cleared screen; stop footstep audio
-      if (footstepIntervalRef.current) {
-        clearInterval(footstepIntervalRef.current);
-        footstepIntervalRef.current = null;
-      }
-    }
-
-    return () => {
-      if (footstepIntervalRef.current) {
-        clearInterval(footstepIntervalRef.current);
-        footstepIntervalRef.current = null;
-      }
-    };
-  }, [phase, prefersReducedMotion]);
-
-  // 2. Transition event handler for dinosaur departure
-  const handleTransitionEnd = useCallback((e) => {
-    if (e.target !== dinoContainerRef.current) return;
-    if (e.propertyName !== 'transform') return;
+  const reportDeparted = useCallback(() => {
     if (departedCalledRef.current) return;
     departedCalledRef.current = true;
     onDinosaurDeparted?.();
   }, [onDinosaurDeparted]);
 
-  // Fallback safety timer for EXITING (850ms) in case transitionend is suppressed
-  useEffect(() => {
-    if (phase !== 'EXITING') return;
-    const timer = setTimeout(() => {
-      if (!departedCalledRef.current) {
-        departedCalledRef.current = true;
-        onDinosaurDeparted?.();
-      }
-    }, 850);
-    return () => clearTimeout(timer);
-  }, [phase, onDinosaurDeparted]);
+  const reportDustFinished = useCallback(() => {
+    if (dustCalledRef.current) return;
+    dustCalledRef.current = true;
+    footstepAudio.destroy();
+    onDustFinished?.();
+  }, [onDustFinished]);
 
-  // 3. Settling timer for DUST_FINISHING (220ms after dinosaur has left screen)
+  // 1. Synchronized footstep audio loop (silent until the visitor enables sound)
   useEffect(() => {
-    if (phase !== 'DUST_FINISHING') return;
-    const timer = setTimeout(() => {
-      if (!dustCalledRef.current) {
-        dustCalledRef.current = true;
-        footstepAudio.destroy();
-        onDustFinished?.();
-      }
-    }, 220);
-    return () => clearTimeout(timer);
-  }, [phase, onDustFinished]);
+    if (prefersReducedMotion) return undefined;
 
-  // Audio toggle handler (safe, non-blocking)
+    let interval = null;
+    if (phase === 'ENTERING' || phase === 'WAITING') {
+      interval = setInterval(() => footstepAudio.playFootstep(1.0), 100);
+    } else if (phase === 'EXITING') {
+      interval = setInterval(() => footstepAudio.playFootstep(1.25), 65);
+    }
+
+    const tick1 = phase === 'EXITING' ? setTimeout(() => footstepAudio.playDustTick(), 160) : null;
+    const tick2 = phase === 'EXITING' ? setTimeout(() => footstepAudio.playDustTick(), 280) : null;
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (tick1) clearTimeout(tick1);
+      if (tick2) clearTimeout(tick2);
+    };
+  }, [phase, prefersReducedMotion]);
+
+  // 2. Entrance: animationend on the translate keyframe is the primary signal.
+  const handleContainerAnimationEnd = useCallback((e) => {
+    if (e.target !== dinoContainerRef.current) return;
+    if (e.animationName !== 'dino-entrance') return;
+    reportEntranceComplete();
+  }, [reportEntranceComplete]);
+
+  // Safety net only — covers suppressed animations so the loader can never stick.
+  useEffect(() => {
+    if (phase !== 'ENTERING') return undefined;
+
+    if (prefersReducedMotion || entranceSettled) {
+      const raf = requestAnimationFrame(reportEntranceComplete);
+      return () => cancelAnimationFrame(raf);
+    }
+
+    const timer = setTimeout(
+      reportEntranceComplete,
+      DINO_ENTRANCE_MS - entranceOffset + 500,
+    );
+    return () => clearTimeout(timer);
+  }, [phase, prefersReducedMotion, entranceSettled, entranceOffset, reportEntranceComplete]);
+
+  // 3. Departure: transitionend on the exit transform.
+  const handleTransitionEnd = useCallback((e) => {
+    if (e.target !== dinoContainerRef.current) return;
+    if (e.propertyName !== 'transform') return;
+    reportDeparted();
+  }, [reportDeparted]);
+
+  useEffect(() => {
+    if (phase !== 'EXITING') return undefined;
+    const timer = setTimeout(reportDeparted, EXIT_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [phase, reportDeparted]);
+
+  // 4. Dust: every particle reports, the last one ends the sequence.
+  const handleDustAnimationEnd = useCallback((e) => {
+    if (e.animationName !== 'dust-scatter') return;
+    dustEndCountRef.current += 1;
+    if (dustEndCountRef.current >= DUST_PARTICLES.length) reportDustFinished();
+  }, [reportDustFinished]);
+
+  useEffect(() => {
+    if (phase !== 'DUST_FINISHING') return undefined;
+    const timer = setTimeout(reportDustFinished, DUST_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [phase, reportDustFinished]);
+
+  // Audio unlocks only from an explicit click, honouring autoplay policies.
   const handleToggleSound = useCallback(async () => {
     const active = await footstepAudio.toggleAudio();
     setSoundEnabled(active);
   }, []);
 
+  const isEntering = phase === 'ENTERING' && !entranceSettled && !prefersReducedMotion;
   const isExiting = phase === 'EXITING';
   const isDustFinishing = phase === 'DUST_FINISHING';
   const isLeavingOrLeft = isExiting || isDustFinishing;
 
   return (
     <aside
-      className={`startup-loader ${isLeavingOrLeft ? 'is-departing' : ''}`}
+      className="startup-loader"
       aria-label="Application loading screen"
       role="status"
       aria-live="polite"
@@ -151,14 +169,19 @@ export default function StartupLoader({
         <div className="dino-stage">
           <div
             ref={dinoContainerRef}
-            className={`dino-container ${isExiting ? 'is-exiting' : ''} ${isDustFinishing ? 'is-dust-finishing' : ''}`}
+            className={`dino-container ${isEntering ? 'is-entering' : ''} ${isExiting ? 'is-exiting' : ''} ${isDustFinishing ? 'is-dust-finishing' : ''}`}
+            style={isEntering ? { animationDelay: `-${entranceOffset}ms` } : undefined}
             onTransitionEnd={handleTransitionEnd}
+            onAnimationEnd={handleContainerAnimationEnd}
           >
             <div className="dino-pixel" />
           </div>
 
           {/* Directional Pixel Dust Particles kicking backwards */}
-          <div className={`dino-dust-container ${isLeavingOrLeft ? 'is-active' : ''}`}>
+          <div
+            className={`dino-dust-container ${isLeavingOrLeft ? 'is-active' : ''}`}
+            onAnimationEnd={handleDustAnimationEnd}
+          >
             {DUST_PARTICLES.map((p) => (
               <div
                 key={p.id}
