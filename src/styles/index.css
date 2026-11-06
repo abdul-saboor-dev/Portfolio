@@ -1,6 +1,8 @@
-/* index.css — Global reset and font */
-
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* index.css — Global reset and font
+ * Fonts are loaded by the <link> in index.html. An @import here duplicated that
+ * request and, because an @import is discovered only after its own stylesheet
+ * arrives, added a second render-blocking round trip to the startup handoff.
+ */
 
 *,
 *::before,

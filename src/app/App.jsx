@@ -9,16 +9,11 @@ import HeroTypography from '../features/hero/HeroTypography.jsx';
 import StartupLoader from '../features/startup/StartupLoader.jsx';
 import { useFramePreloader } from '../features/portrait/useFramePreloader.js';
 import { NEUTRAL_YAW, NEUTRAL_PITCH } from '../features/portrait/frameData.js';
-import {
-  LOADER_THRESHOLD_MS,
-  MIN_WAITING_RUN_MS,
-  elapsedSinceBootMs,
-} from '../features/startup/startupTiming.js';
+import { MIN_WAITING_RUN_MS } from '../features/startup/startupTiming.js';
 import '../styles/App.css';
 
-// 6-State Explicit Startup Lifecycle
+// Explicit Startup Lifecycle — the dinosaur runs on every load, cached or not
 const STARTUP_LIFECYCLE = {
-  HIDDEN: 'HIDDEN',
   ENTERING: 'ENTERING',
   WAITING: 'WAITING',
   EXITING: 'EXITING',
@@ -85,11 +80,11 @@ export default function App() {
 
   const isEssentialReady = fontsReady && isCenterLoaded;
 
-  // ── 6-State Explicit Lifecycle State Machine ──
-  const [startupState, setStartupState] = useState(() => {
-    if (prefersReducedMotion) return STARTUP_LIFECYCLE.COMPLETED;
-    return STARTUP_LIFECYCLE.HIDDEN;
-  });
+  // ── Explicit Lifecycle State Machine ──
+  // The dinosaur is part of the experience rather than a conditional loading
+  // indicator: every load enters the same lifecycle, and reduced motion gets an
+  // abbreviated presentation instead of being skipped.
+  const [startupState, setStartupState] = useState(STARTUP_LIFECYCLE.ENTERING);
 
   const essentialReadyRef = useRef(false);
   const dinoArrivedAtRef = useRef(null);
@@ -102,8 +97,8 @@ export default function App() {
   // Runs in the same commit that mounts the loader and before paint, so the
   // pre-React shell dinosaur and the React dinosaur swap without a blank frame.
   useLayoutEffect(() => {
-    if (startupState !== STARTUP_LIFECYCLE.HIDDEN) removeStartupShell();
-  }, [startupState]);
+    removeStartupShell();
+  }, []);
 
   const clearExitTimer = useCallback(() => {
     if (exitTimerRef.current !== null) {
@@ -113,48 +108,33 @@ export default function App() {
   }, []);
 
   // Readiness never cuts the sequence short: the minimum waiting period is
-  // measured from the moment the dinosaur reaches the centre.
+  // measured from the moment the dinosaur reaches the centre. Reduced motion
+  // waits for readiness only, since there is no run to watch.
   const scheduleExit = useCallback(() => {
     if (exitTimerRef.current !== null) return;
     const arrivedAt = dinoArrivedAtRef.current;
     if (arrivedAt === null) return;
 
-    const remaining = Math.max(0, MIN_WAITING_RUN_MS - (performance.now() - arrivedAt));
+    const remaining = prefersReducedMotion
+      ? 0
+      : Math.max(0, MIN_WAITING_RUN_MS - (performance.now() - arrivedAt));
     exitTimerRef.current = setTimeout(() => {
       exitTimerRef.current = null;
       setStartupState((prev) =>
         prev === STARTUP_LIFECYCLE.WAITING ? STARTUP_LIFECYCLE.EXITING : prev,
       );
     }, remaining);
-  }, []);
+  }, [prefersReducedMotion]);
 
-  // 1. Visibility threshold: ready in time → no dinosaur at all, otherwise run the entrance.
-  useEffect(() => {
-    if (startupState !== STARTUP_LIFECYCLE.HIDDEN) return;
-
-    const remaining = Math.max(0, LOADER_THRESHOLD_MS - elapsedSinceBootMs());
-    const timer = setTimeout(() => {
-      setStartupState(
-        essentialReadyRef.current ? STARTUP_LIFECYCLE.COMPLETED : STARTUP_LIFECYCLE.ENTERING,
-      );
-    }, remaining);
-
-    return () => clearTimeout(timer);
-  }, [startupState]);
-
-  // 2. Readiness handler: fast path skips the loader, visible path must finish its sequence.
+  // 1. Readiness handler: an already-warm cache still runs the full visible
+  //    sequence — readiness only decides when the centre wait may end.
   useEffect(() => {
     if (!isEssentialReady) return;
-
-    if (startupState === STARTUP_LIFECYCLE.HIDDEN) {
-      queueMicrotask(() => setStartupState(STARTUP_LIFECYCLE.COMPLETED));
-    } else if (startupState === STARTUP_LIFECYCLE.WAITING) {
-      scheduleExit();
-    }
+    if (startupState === STARTUP_LIFECYCLE.WAITING) scheduleExit();
     // ENTERING: the centre-arrival effect schedules the exit instead.
   }, [isEssentialReady, startupState, scheduleExit]);
 
-  // 3. Centre arrival starts the minimum waiting period.
+  // 2. Centre arrival starts the minimum waiting period.
   const handleEntranceComplete = useCallback(() => {
     setStartupState((prev) =>
       prev === STARTUP_LIFECYCLE.ENTERING ? STARTUP_LIFECYCLE.WAITING : prev,
@@ -171,7 +151,7 @@ export default function App() {
 
   useEffect(() => clearExitTimer, [clearExitTimer]);
 
-  // 4. Departure & Dust Lifecycle Handlers
+  // 3. Departure & Dust Lifecycle Handlers
   const handleDinosaurDeparted = useCallback(() => {
     setStartupState((prev) => {
       if (prev === STARTUP_LIFECYCLE.EXITING) {
@@ -206,17 +186,15 @@ export default function App() {
   }, []);
 
   // Formation starts when typography is completely done and neutral frame 189 is loaded
-  const isFormationActive = (heroTypoDone && isCenterLoaded) || prefersReducedMotion;
+  const isFormationActive =
+    startupState === STARTUP_LIFECYCLE.COMPLETED &&
+    ((heroTypoDone && isCenterLoaded) || prefersReducedMotion);
 
   const handleFrameChange = useCallback((_info) => {
     // Preserved
   }, []);
 
-  const isDinosaurActive =
-    startupState === STARTUP_LIFECYCLE.ENTERING ||
-    startupState === STARTUP_LIFECYCLE.WAITING ||
-    startupState === STARTUP_LIFECYCLE.EXITING ||
-    startupState === STARTUP_LIFECYCLE.DUST_FINISHING;
+  const isDinosaurActive = startupState !== STARTUP_LIFECYCLE.COMPLETED;
 
   const isTypographyActive = startupState === STARTUP_LIFECYCLE.COMPLETED;
 

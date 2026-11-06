@@ -14,7 +14,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { footstepAudio } from './footstepAudio.js';
-import { DINO_ENTRANCE_MS, entranceOffsetMs } from './startupTiming.js';
+import {
+  DINO_ENTRANCE_MS,
+  DINO_RUN_CYCLE_MS,
+  DINO_SPRINT_CYCLE_MS,
+  readShellPhase,
+} from './startupTiming.js';
 import './StartupLoader.css';
 // 10 pre-configured directional square pixel particles kicked up near rear feet/tail
 const DUST_PARTICLES = [
@@ -34,11 +39,13 @@ const DUST_PARTICLES = [
 const DUST_SETTLE_MS = 260;
 const EXIT_FALLBACK_MS = 900;
 
-// The run sprite cycles its three poses every 0.3s (0.14s while sprinting), so a
-// foot lands twice per cycle. Tapping at exactly that cadence keeps the audio
-// locked to the alternating-leg animation instead of an unrelated metronome.
-const FOOTSTEP_RUN_MS = 150;
-const FOOTSTEP_SPRINT_MS = 70;
+// Dust accents ride the particle stagger, so each puff lands with a visible kick
+// instead of on an unrelated timer.
+const DUST_TICKS = [
+  { delay: 60, strength: 1 },
+  { delay: 150, strength: 0.8 },
+  { delay: 240, strength: 0.6 },
+];
 
 export default function StartupLoader({
   phase = 'ENTERING',
@@ -50,14 +57,17 @@ export default function StartupLoader({
   prefersReducedMotion = false,
 }) {
   const dinoContainerRef = useRef(null);
+  const dinoPixelRef = useRef(null);
   const departedCalledRef = useRef(false);
   const dustCalledRef = useRef(false);
   const entranceCalledRef = useRef(false);
   const dustEndCountRef = useRef(0);
 
-  // Frozen at mount: how far the pre-React shell entrance had already travelled,
-  // so the React dinosaur resumes mid-flight instead of restarting or skipping it.
-  const [entranceOffset] = useState(() => entranceOffsetMs());
+  // Frozen at mount: how much of the entrance the pre-React shell had actually
+  // painted, and where its leg cycle stood, so the React dinosaur resumes the
+  // same frame instead of restarting or skipping ahead of what was on screen.
+  const [shellPhase] = useState(() => readShellPhase());
+  const entranceOffset = shellPhase.entranceMs;
   const entranceSettled = entranceOffset >= DINO_ENTRANCE_MS;
 
   const reportEntranceComplete = useCallback(() => {
@@ -79,32 +89,69 @@ export default function StartupLoader({
     onDustFinished?.();
   }, [onDustFinished]);
 
-  // 1. Synchronized footstep audio loop. Sound is preferred on by default but
-  //    stays silent until a real gesture unlocks the AudioContext, so nothing
-  //    plays on load and no control is needed to hear it.
+  // 1. Audio is attempted as soon as this appearance exists, independently of the
+  //    gait loop and long before the dinosaur reaches the centre. It never awaits
+  //    anything, so a browser that refuses gesture-free playback cannot slow the run.
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    footstepAudio.start();
+  }, [prefersReducedMotion]);
+
+  // 2. Footsteps read from the gait itself. The taps come from the same CSS
+  //    animation that moves the legs, so the rhythm cannot drift away from what is
+  //    on screen, and nothing is scheduled while the context is still suspended.
   useEffect(() => {
     if (prefersReducedMotion) return undefined;
+    if (phase !== 'ENTERING' && phase !== 'WAITING' && phase !== 'EXITING') return undefined;
 
-    footstepAudio.armOnFirstInteraction();
+    const sprinting = phase === 'EXITING';
+    const cycleMs = sprinting ? DINO_SPRINT_CYCLE_MS : DINO_RUN_CYCLE_MS;
+    const poseMs = cycleMs / 3;
+    let frame = 0;
+    let gait = null;
+    let lastPose = -1;
 
-    let interval = null;
-    if (phase === 'ENTERING' || phase === 'WAITING') {
-      interval = setInterval(() => footstepAudio.playFootstep(1.0), FOOTSTEP_RUN_MS);
-    } else if (phase === 'EXITING') {
-      interval = setInterval(() => footstepAudio.playFootstep(1.25), FOOTSTEP_SPRINT_MS);
-    }
+    const observeGait = () => {
+      frame = requestAnimationFrame(observeGait);
+      if (footstepAudio.isDisposed) return;
 
-    const tick1 = phase === 'EXITING' ? setTimeout(() => footstepAudio.playDustTick(), 160) : null;
-    const tick2 = phase === 'EXITING' ? setTimeout(() => footstepAudio.playDustTick(), 280) : null;
+      // Captured once: getAnimations() allocates, and this runs every frame.
+      if (gait === null) {
+        const pixel = dinoPixelRef.current;
+        const animations = pixel ? pixel.getAnimations() : [];
+        gait = animations.length > 0 ? animations[0] : null;
+        if (gait === null) return;
+      }
+      // startTime stays null until the sprite has been painted, which is the same
+      // condition that keeps the animation clock behind the JS clock.
+      if (gait.startTime === null || typeof gait.currentTime !== 'number') return;
+
+      const pose = Math.floor((gait.currentTime % cycleMs) / poseMs);
+      if (pose !== lastPose) {
+        // Only the two single-leg poses plant a foot; the third is the double
+        // contact, so tapping it would add a third step per cycle.
+        if (lastPose !== -1 && (pose === 1 || pose === 2)) {
+          footstepAudio.playFootstep(pose === 1 ? 0 : 1, sprinting ? 1.25 : 1);
+        }
+        lastPose = pose;
+      }
+    };
+
+    frame = requestAnimationFrame(observeGait);
+
+    const ticks = sprinting
+      ? DUST_TICKS.map(({ delay, strength }) =>
+          setTimeout(() => footstepAudio.playDustTick(strength), delay),
+        )
+      : [];
 
     return () => {
-      if (interval) clearInterval(interval);
-      if (tick1) clearTimeout(tick1);
-      if (tick2) clearTimeout(tick2);
+      cancelAnimationFrame(frame);
+      ticks.forEach(clearTimeout);
     };
   }, [phase, prefersReducedMotion]);
 
-  // 2. Entrance: animationend on the translate keyframe is the primary signal.
+  // 3. Entrance: animationend on the translate keyframe is the primary signal.
   const handleContainerAnimationEnd = useCallback((e) => {
     if (e.target !== dinoContainerRef.current) return;
     if (e.animationName !== 'dino-entrance') return;
@@ -127,7 +174,7 @@ export default function StartupLoader({
     return () => clearTimeout(timer);
   }, [phase, prefersReducedMotion, entranceSettled, entranceOffset, reportEntranceComplete]);
 
-  // 3. Departure: transitionend on the exit transform.
+  // 4. Departure: transitionend on the exit transform.
   const handleTransitionEnd = useCallback((e) => {
     if (e.target !== dinoContainerRef.current) return;
     if (e.propertyName !== 'transform') return;
@@ -140,23 +187,57 @@ export default function StartupLoader({
     return () => clearTimeout(timer);
   }, [phase, reportDeparted]);
 
-  // 4. Dust: every particle reports, the last one ends the sequence.
+  // 5. Dust: every particle reports, the last one ends the sequence.
   const handleDustAnimationEnd = useCallback((e) => {
     if (e.animationName !== 'dust-scatter') return;
     dustEndCountRef.current += 1;
-    if (dustEndCountRef.current >= DUST_PARTICLES.length) reportDustFinished();
-  }, [reportDustFinished]);
+    // Counting starts with the sprint, but completion only counts once the departure
+    // has been reported: firing earlier would latch while App is still in EXITING,
+    // where the callback is ignored, and the loader could then never finish.
+    if (dustEndCountRef.current >= DUST_PARTICLES.length && phase === 'DUST_FINISHING') {
+      reportDustFinished();
+    }
+  }, [phase, reportDustFinished]);
 
   useEffect(() => {
     if (phase !== 'DUST_FINISHING') return undefined;
     const timer = setTimeout(reportDustFinished, DUST_SETTLE_MS);
-    return () => clearTimeout(timer);
+    // A slow exit transition can let every particle land before this phase starts,
+    // so report on the next frame instead of holding an empty stage for the fallback.
+    const raf = dustEndCountRef.current >= DUST_PARTICLES.length
+      ? requestAnimationFrame(reportDustFinished)
+      : null;
+    return () => {
+      clearTimeout(timer);
+      if (raf !== null) cancelAnimationFrame(raf);
+    };
   }, [phase, reportDustFinished]);
+
+  // 6. Reduced motion keeps the loader visible but static. With the run, travel and
+  //    dust animations suppressed there are no animationend/transitionend events to
+  //    wait for, so departure and dust hand off on the next frame rather than on a
+  //    fallback timer that would stall on a still image.
+  useEffect(() => {
+    if (!prefersReducedMotion) return undefined;
+    if (phase !== 'EXITING' && phase !== 'DUST_FINISHING') return undefined;
+
+    const raf = requestAnimationFrame(() => {
+      if (phase === 'EXITING') reportDeparted();
+      else reportDustFinished();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [phase, prefersReducedMotion, reportDeparted, reportDustFinished]);
 
   const isEntering = phase === 'ENTERING' && !entranceSettled && !prefersReducedMotion;
   const isExiting = phase === 'EXITING';
   const isDustFinishing = phase === 'DUST_FINISHING';
   const isLeavingOrLeft = isExiting || isDustFinishing;
+
+  // Negative delay on the sprite itself keeps the pose React paints with identical
+  // to the last pose the shell showed, so the handoff cannot change the rhythm.
+  const pixelStyle = shellPhase.runMs > 0
+    ? { animationDelay: `-${Math.round(shellPhase.runMs)}ms` }
+    : undefined;
 
   return (
     <aside
@@ -171,33 +252,39 @@ export default function StartupLoader({
           <div
             ref={dinoContainerRef}
             className={`dino-container ${isEntering ? 'is-entering' : ''} ${isExiting ? 'is-exiting' : ''} ${isDustFinishing ? 'is-dust-finishing' : ''}`}
-            style={isEntering ? { animationDelay: `-${entranceOffset}ms` } : undefined}
+            style={
+              isEntering && entranceOffset > 0
+                ? { animationDelay: `-${Math.round(entranceOffset)}ms` }
+                : undefined
+            }
             onTransitionEnd={handleTransitionEnd}
             onAnimationEnd={handleContainerAnimationEnd}
           >
-            <div className="dino-pixel" />
-          </div>
+            <div ref={dinoPixelRef} className="dino-pixel" style={pixelStyle} />
 
-          {/* Directional Pixel Dust Particles kicking backwards */}
-          <div
-            className={`dino-dust-container ${isLeavingOrLeft ? 'is-active' : ''}`}
-            onAnimationEnd={handleDustAnimationEnd}
-          >
-            {DUST_PARTICLES.map((p) => (
-              <div
-                key={p.id}
-                className="dino-dust-particle"
-                style={{
-                  width: `${p.size}px`,
-                  height: `${p.size}px`,
-                  left: `${p.x}px`,
-                  top: `${p.y}px`,
-                  animationDelay: p.delay,
-                  '--dust-x': `${p.dx}px`,
-                  '--dust-y': `${p.dy}px`,
-                }}
-              />
-            ))}
+            {/* Directional Pixel Dust Particles kicking backwards, parented to the
+                dinosaur so the trail leaves with it instead of hanging in the
+                centre of the screen. */}
+            <div
+              className={`dino-dust-container ${isLeavingOrLeft ? 'is-active' : ''}`}
+              onAnimationEnd={handleDustAnimationEnd}
+            >
+              {DUST_PARTICLES.map((p) => (
+                <div
+                  key={p.id}
+                  className="dino-dust-particle"
+                  style={{
+                    width: `${p.size}px`,
+                    height: `${p.size}px`,
+                    left: `${p.x}px`,
+                    top: `${p.y}px`,
+                    animationDelay: p.delay,
+                    '--dust-x': `${p.dx}px`,
+                    '--dust-y': `${p.dy}px`,
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
