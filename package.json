@@ -1,8 +1,8 @@
 {
-  "name": "portfolio",
+  "name": "interactive-portrait-showcase",
   "private": true,
   "version": "0.0.0",
-  "description": "Interactive Portfolio",
+  "description": "Single-page interactive showcase: a cursor-tracking portrait driven by 340 transparent frames on one canvas.",
   "author": "Abdul Saboor",
   "type": "module",
   "scripts": {

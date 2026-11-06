@@ -5,19 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="author" content="Abdul Saboor" />
-    <meta name="description" content="Portfolio of Abdul Saboor — Creative Technologist & Engineer." />
-    <title>Abdul Saboor — Portfolio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <meta name="description" content="Interactive portrait that tracks your cursor across 340 pre-rendered frames, smoothed in real time on one canvas." />
+    <title>Interactive Portrait | Abdul Saboor</title>
     <!-- Neutral portrait frame 189 (col 9 / row 9). Must match FRAME_FILENAMES[189] in src/features/portrait/frameList.generated.js -->
     <link rel="preload" as="image" href="/frames/Abdul-Saboor_189_9_9_yaw-1.1_pitch-1.1_px-0.8_py0.8.webp" type="image/webp" fetchpriority="high" />
     <style>
-      /* Pre-React Loading Shell — Zero White Flash & Uiverse Dinosaur */
-      /* Original component: 20essentials (https://github.com/20essentials/project-000-132) */
+      /* Painted before the bundle runs so the first frame is never white. */
       html, body {
-        background-color: #050505 !important;
-        background: #050505 !important;
+        background-color: #050505;
         color: #ffffff;
         margin: 0;
         padding: 0;
@@ -25,116 +20,9 @@
         height: 100%;
         overflow: hidden;
       }
-      #startup-shell {
-        --dino-scale: 1;
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        background-color: #050505;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 99999;
-        user-select: none;
-        -webkit-user-select: none;
-      }
-      /*
-       * Must centre its container the way .dino-stage does in StartupLoader.css:
-       * the container shrinks with --dino-scale, so without flex centring the
-       * shell dinosaur sits up-left of the React one and the handoff jumps.
-       */
-      .shell-dino-stage {
-        position: relative;
-        width: 96px;
-        height: 96px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      /*
-       * Entrance mirrors StartupLoader.css exactly: 0.85s left-to-centre travel
-       * starting on the very first frame. React takes over by reading this
-       * animation's own clock (Animation.currentTime) and applying the same value
-       * as a negative animation-delay, so the handoff carries painted progress
-       * instead of wall-clock time this shell never got to render.
-       */
-      .shell-dino-container {
-        position: relative;
-        width: calc(96px * var(--dino-scale, 1));
-        height: calc(96px * var(--dino-scale, 1));
-        will-change: transform;
-        animation: shell-dino-entrance 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-      }
-      @keyframes shell-dino-entrance {
-        0% {
-          transform: translateX(calc(-50vw - 140px));
-        }
-        100% {
-          transform: translateX(0);
-        }
-      }
-      .shell-dino-pixel {
-        width: 4px;
-        height: 4px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        box-shadow: 52px 0px #ffffff, 56px 0px #ffffff, 60px 0px #ffffff, 64px 0px #ffffff, 68px 0px #ffffff, 72px 0px #ffffff, 76px 0px #ffffff, 80px 0px #ffffff, 84px 0px #ffffff, 88px 0px #ffffff, 48px 4px #ffffff, 52px 4px #ffffff, 56px 4px #ffffff, 60px 4px #ffffff, 64px 4px #ffffff, 68px 4px #ffffff, 72px 4px #ffffff, 76px 4px #ffffff, 80px 4px #ffffff, 84px 4px #ffffff, 88px 4px #ffffff, 92px 4px #ffffff, 48px 8px #ffffff, 52px 8px #ffffff, 64px 8px #ffffff, 68px 8px #ffffff, 72px 8px #ffffff, 76px 8px #ffffff, 80px 8px #ffffff, 84px 8px #ffffff, 88px 8px #ffffff, 92px 8px #ffffff, 48px 12px #ffffff, 52px 12px #ffffff, 64px 12px #ffffff, 68px 12px #ffffff, 72px 12px #ffffff, 76px 12px #ffffff, 80px 12px #ffffff, 84px 12px #ffffff, 88px 12px #ffffff, 92px 12px #ffffff, 48px 16px #ffffff, 52px 16px #ffffff, 56px 16px #ffffff, 60px 16px #ffffff, 64px 16px #ffffff, 68px 16px #ffffff, 72px 16px #ffffff, 76px 16px #ffffff, 80px 16px #ffffff, 84px 16px #ffffff, 88px 16px #ffffff, 92px 16px #ffffff, 48px 20px #ffffff, 52px 20px #ffffff, 56px 20px #ffffff, 60px 20px #ffffff, 64px 20px #ffffff, 68px 20px #ffffff, 72px 20px #ffffff, 76px 20px #ffffff, 80px 20px #ffffff, 84px 20px #ffffff, 88px 20px #ffffff, 92px 20px #ffffff, 48px 24px #ffffff, 52px 24px #ffffff, 56px 24px #ffffff, 60px 24px #ffffff, 64px 24px #ffffff, 68px 24px #ffffff, 48px 28px #ffffff, 52px 28px #ffffff, 56px 28px #ffffff, 60px 28px #ffffff, 64px 28px #ffffff, 68px 28px #ffffff, 48px 32px #ffffff, 52px 32px #ffffff, 56px 32px #ffffff, 60px 32px #ffffff, 64px 32px #ffffff, 68px 32px #ffffff, 72px 32px #ffffff, 76px 32px #ffffff, 80px 32px #ffffff, 84px 32px #ffffff, 0px 36px #ffffff, 40px 36px #ffffff, 44px 36px #ffffff, 48px 36px #ffffff, 52px 36px #ffffff, 56px 36px #ffffff, 60px 36px #ffffff, 64px 36px #ffffff, 0px 40px #ffffff, 32px 40px #ffffff, 36px 40px #ffffff, 40px 40px #ffffff, 44px 40px #ffffff, 48px 40px #ffffff, 52px 40px #ffffff, 56px 40px #ffffff, 60px 40px #ffffff, 64px 40px #ffffff, 0px 44px #ffffff, 4px 44px #ffffff, 28px 44px #ffffff, 32px 44px #ffffff, 36px 44px #ffffff, 40px 44px #ffffff, 44px 44px #ffffff, 48px 44px #ffffff, 52px 44px #ffffff, 56px 44px #ffffff, 60px 44px #ffffff, 64px 44px #ffffff, 68px 44px #ffffff, 72px 44px #ffffff, 0px 48px #ffffff, 4px 48px #ffffff, 8px 48px #ffffff, 24px 48px #ffffff, 28px 48px #ffffff, 32px 48px #ffffff, 36px 48px #ffffff, 40px 48px #ffffff, 44px 48px #ffffff, 48px 48px #ffffff, 52px 48px #ffffff, 56px 48px #ffffff, 60px 48px #ffffff, 64px 48px #ffffff, 72px 48px #ffffff, 0px 52px #ffffff, 4px 52px #ffffff, 8px 52px #ffffff, 12px 52px #ffffff, 16px 52px #ffffff, 20px 52px #ffffff, 24px 52px #ffffff, 28px 52px #ffffff, 32px 52px #ffffff, 36px 52px #ffffff, 40px 52px #ffffff, 44px 52px #ffffff, 48px 52px #ffffff, 52px 52px #ffffff, 56px 52px #ffffff, 60px 52px #ffffff, 64px 52px #ffffff, 0px 56px #ffffff, 4px 56px #ffffff, 8px 56px #ffffff, 12px 56px #ffffff, 16px 56px #ffffff, 20px 56px #ffffff, 24px 56px #ffffff, 28px 56px #ffffff, 32px 56px #ffffff, 36px 56px #ffffff, 40px 56px #ffffff, 44px 56px #ffffff, 48px 56px #ffffff, 52px 56px #ffffff, 56px 56px #ffffff, 60px 56px #ffffff, 64px 56px #ffffff, 4px 60px #ffffff, 8px 60px #ffffff, 12px 60px #ffffff, 16px 60px #ffffff, 20px 60px #ffffff, 24px 60px #ffffff, 28px 60px #ffffff, 32px 60px #ffffff, 36px 60px #ffffff, 40px 60px #ffffff, 44px 60px #ffffff, 48px 60px #ffffff, 52px 60px #ffffff, 56px 60px #ffffff, 60px 60px #ffffff, 64px 60px #ffffff, 8px 64px #ffffff, 12px 64px #ffffff, 16px 64px #ffffff, 20px 64px #ffffff, 24px 64px #ffffff, 28px 64px #ffffff, 32px 64px #ffffff, 36px 64px #ffffff, 40px 64px #ffffff, 44px 64px #ffffff, 48px 64px #ffffff, 52px 64px #ffffff, 56px 64px #ffffff, 60px 64px #ffffff, 12px 68px #ffffff, 16px 68px #ffffff, 20px 68px #ffffff, 24px 68px #ffffff, 28px 68px #ffffff, 32px 68px #ffffff, 36px 68px #ffffff, 40px 68px #ffffff, 44px 68px #ffffff, 48px 68px #ffffff, 52px 68px #ffffff, 56px 68px #ffffff, 16px 72px #ffffff, 20px 72px #ffffff, 24px 72px #ffffff, 28px 72px #ffffff, 32px 72px #ffffff, 36px 72px #ffffff, 40px 72px #ffffff, 44px 72px #ffffff, 48px 72px #ffffff, 52px 72px #ffffff, 20px 76px #ffffff, 24px 76px #ffffff, 28px 76px #ffffff, 32px 76px #ffffff, 36px 76px #ffffff, 40px 76px #ffffff, 44px 76px #ffffff, 48px 76px #ffffff, 24px 80px #ffffff, 28px 80px #ffffff, 32px 80px #ffffff, 44px 80px #ffffff, 48px 80px #ffffff, 24px 84px #ffffff, 28px 84px #ffffff, 48px 84px #ffffff, 24px 88px #ffffff, 48px 88px #ffffff, 24px 92px #ffffff, 28px 92px #ffffff, 48px 92px #ffffff, 52px 92px #ffffff;
-        animation: shell-dino-running 0.3s steps(1) infinite;
-      }
-      @keyframes shell-dino-running {
-        0%, 100% {
-          box-shadow: 52px 0px #ffffff, 56px 0px #ffffff, 60px 0px #ffffff, 64px 0px #ffffff, 68px 0px #ffffff, 72px 0px #ffffff, 76px 0px #ffffff, 80px 0px #ffffff, 84px 0px #ffffff, 88px 0px #ffffff, 48px 4px #ffffff, 52px 4px #ffffff, 56px 4px #ffffff, 60px 4px #ffffff, 64px 4px #ffffff, 68px 4px #ffffff, 72px 4px #ffffff, 76px 4px #ffffff, 80px 4px #ffffff, 84px 4px #ffffff, 88px 4px #ffffff, 92px 4px #ffffff, 48px 8px #ffffff, 52px 8px #ffffff, 64px 8px #ffffff, 68px 8px #ffffff, 72px 8px #ffffff, 76px 8px #ffffff, 80px 8px #ffffff, 84px 8px #ffffff, 88px 8px #ffffff, 92px 8px #ffffff, 48px 12px #ffffff, 52px 12px #ffffff, 64px 12px #ffffff, 68px 12px #ffffff, 72px 12px #ffffff, 76px 12px #ffffff, 80px 12px #ffffff, 84px 12px #ffffff, 88px 12px #ffffff, 92px 12px #ffffff, 48px 16px #ffffff, 52px 16px #ffffff, 56px 16px #ffffff, 60px 16px #ffffff, 64px 16px #ffffff, 68px 16px #ffffff, 72px 16px #ffffff, 76px 16px #ffffff, 80px 16px #ffffff, 84px 16px #ffffff, 88px 16px #ffffff, 92px 16px #ffffff, 48px 20px #ffffff, 52px 20px #ffffff, 56px 20px #ffffff, 60px 20px #ffffff, 64px 20px #ffffff, 68px 20px #ffffff, 72px 20px #ffffff, 76px 20px #ffffff, 80px 20px #ffffff, 84px 20px #ffffff, 88px 20px #ffffff, 92px 20px #ffffff, 48px 24px #ffffff, 52px 24px #ffffff, 56px 24px #ffffff, 60px 24px #ffffff, 64px 24px #ffffff, 68px 24px #ffffff, 48px 28px #ffffff, 52px 28px #ffffff, 56px 28px #ffffff, 60px 28px #ffffff, 64px 28px #ffffff, 68px 28px #ffffff, 48px 32px #ffffff, 52px 32px #ffffff, 56px 32px #ffffff, 60px 32px #ffffff, 64px 32px #ffffff, 68px 32px #ffffff, 72px 32px #ffffff, 76px 32px #ffffff, 80px 32px #ffffff, 84px 32px #ffffff, 0px 36px #ffffff, 40px 36px #ffffff, 44px 36px #ffffff, 48px 36px #ffffff, 52px 36px #ffffff, 56px 36px #ffffff, 60px 36px #ffffff, 64px 36px #ffffff, 0px 40px #ffffff, 32px 40px #ffffff, 36px 40px #ffffff, 40px 40px #ffffff, 44px 40px #ffffff, 48px 40px #ffffff, 52px 40px #ffffff, 56px 40px #ffffff, 60px 40px #ffffff, 64px 40px #ffffff, 0px 44px #ffffff, 4px 44px #ffffff, 28px 44px #ffffff, 32px 44px #ffffff, 36px 44px #ffffff, 40px 44px #ffffff, 44px 44px #ffffff, 48px 44px #ffffff, 52px 44px #ffffff, 56px 44px #ffffff, 60px 44px #ffffff, 64px 44px #ffffff, 68px 44px #ffffff, 72px 44px #ffffff, 0px 48px #ffffff, 4px 48px #ffffff, 8px 48px #ffffff, 24px 48px #ffffff, 28px 48px #ffffff, 32px 48px #ffffff, 36px 48px #ffffff, 40px 48px #ffffff, 44px 48px #ffffff, 48px 48px #ffffff, 52px 48px #ffffff, 56px 48px #ffffff, 60px 48px #ffffff, 64px 48px #ffffff, 72px 48px #ffffff, 0px 52px #ffffff, 4px 52px #ffffff, 8px 52px #ffffff, 12px 52px #ffffff, 16px 52px #ffffff, 20px 52px #ffffff, 24px 52px #ffffff, 28px 52px #ffffff, 32px 52px #ffffff, 36px 52px #ffffff, 40px 52px #ffffff, 44px 52px #ffffff, 48px 52px #ffffff, 52px 52px #ffffff, 56px 52px #ffffff, 60px 52px #ffffff, 64px 52px #ffffff, 0px 56px #ffffff, 4px 56px #ffffff, 8px 56px #ffffff, 12px 56px #ffffff, 16px 56px #ffffff, 20px 56px #ffffff, 24px 56px #ffffff, 28px 56px #ffffff, 32px 56px #ffffff, 36px 56px #ffffff, 40px 56px #ffffff, 44px 56px #ffffff, 48px 56px #ffffff, 52px 56px #ffffff, 56px 56px #ffffff, 60px 56px #ffffff, 64px 56px #ffffff, 4px 60px #ffffff, 8px 60px #ffffff, 12px 60px #ffffff, 16px 60px #ffffff, 20px 60px #ffffff, 24px 60px #ffffff, 28px 60px #ffffff, 32px 60px #ffffff, 36px 60px #ffffff, 40px 60px #ffffff, 44px 60px #ffffff, 48px 60px #ffffff, 52px 60px #ffffff, 56px 60px #ffffff, 60px 60px #ffffff, 64px 60px #ffffff, 8px 64px #ffffff, 12px 64px #ffffff, 16px 64px #ffffff, 20px 64px #ffffff, 24px 64px #ffffff, 28px 64px #ffffff, 32px 64px #ffffff, 36px 64px #ffffff, 40px 64px #ffffff, 44px 64px #ffffff, 48px 64px #ffffff, 52px 64px #ffffff, 56px 64px #ffffff, 60px 64px #ffffff, 12px 68px #ffffff, 16px 68px #ffffff, 20px 68px #ffffff, 24px 68px #ffffff, 28px 68px #ffffff, 32px 68px #ffffff, 36px 68px #ffffff, 40px 68px #ffffff, 44px 68px #ffffff, 48px 68px #ffffff, 52px 68px #ffffff, 56px 68px #ffffff, 16px 72px #ffffff, 20px 72px #ffffff, 24px 72px #ffffff, 28px 72px #ffffff, 32px 72px #ffffff, 36px 72px #ffffff, 40px 72px #ffffff, 44px 72px #ffffff, 48px 72px #ffffff, 52px 72px #ffffff, 20px 76px #ffffff, 24px 76px #ffffff, 28px 76px #ffffff, 32px 76px #ffffff, 36px 76px #ffffff, 40px 76px #ffffff, 44px 76px #ffffff, 48px 76px #ffffff, 24px 80px #ffffff, 28px 80px #ffffff, 32px 80px #ffffff, 44px 80px #ffffff, 48px 80px #ffffff, 24px 84px #ffffff, 28px 84px #ffffff, 48px 84px #ffffff, 24px 88px #ffffff, 48px 88px #ffffff, 24px 92px #ffffff, 28px 92px #ffffff, 48px 92px #ffffff, 52px 92px #ffffff;
-        }
-        33.33% {
-          box-shadow: 52px 0px #ffffff, 56px 0px #ffffff, 60px 0px #ffffff, 64px 0px #ffffff, 68px 0px #ffffff, 72px 0px #ffffff, 76px 0px #ffffff, 80px 0px #ffffff, 84px 0px #ffffff, 88px 0px #ffffff, 48px 4px #ffffff, 52px 4px #ffffff, 56px 4px #ffffff, 60px 4px #ffffff, 64px 4px #ffffff, 68px 4px #ffffff, 72px 4px #ffffff, 76px 4px #ffffff, 80px 4px #ffffff, 84px 4px #ffffff, 88px 4px #ffffff, 92px 4px #ffffff, 48px 8px #ffffff, 52px 8px #ffffff, 64px 8px #ffffff, 68px 8px #ffffff, 72px 8px #ffffff, 76px 8px #ffffff, 80px 8px #ffffff, 84px 8px #ffffff, 88px 8px #ffffff, 92px 8px #ffffff, 48px 12px #ffffff, 52px 12px #ffffff, 64px 12px #ffffff, 68px 12px #ffffff, 72px 12px #ffffff, 76px 12px #ffffff, 80px 12px #ffffff, 84px 12px #ffffff, 88px 12px #ffffff, 92px 12px #ffffff, 48px 16px #ffffff, 52px 16px #ffffff, 56px 16px #ffffff, 60px 16px #ffffff, 64px 16px #ffffff, 68px 16px #ffffff, 72px 16px #ffffff, 76px 16px #ffffff, 80px 16px #ffffff, 84px 16px #ffffff, 88px 16px #ffffff, 92px 16px #ffffff, 48px 20px #ffffff, 52px 20px #ffffff, 56px 20px #ffffff, 60px 20px #ffffff, 64px 20px #ffffff, 68px 20px #ffffff, 72px 20px #ffffff, 76px 20px #ffffff, 80px 20px #ffffff, 84px 20px #ffffff, 88px 20px #ffffff, 92px 20px #ffffff, 48px 24px #ffffff, 52px 24px #ffffff, 56px 24px #ffffff, 60px 24px #ffffff, 64px 24px #ffffff, 68px 24px #ffffff, 48px 28px #ffffff, 52px 28px #ffffff, 56px 28px #ffffff, 60px 28px #ffffff, 64px 28px #ffffff, 68px 28px #ffffff, 48px 32px #ffffff, 52px 32px #ffffff, 56px 32px #ffffff, 60px 32px #ffffff, 64px 32px #ffffff, 68px 32px #ffffff, 72px 32px #ffffff, 76px 32px #ffffff, 80px 32px #ffffff, 84px 32px #ffffff, 0px 36px #ffffff, 40px 36px #ffffff, 44px 36px #ffffff, 48px 36px #ffffff, 52px 36px #ffffff, 56px 36px #ffffff, 60px 36px #ffffff, 64px 36px #ffffff, 0px 40px #ffffff, 32px 40px #ffffff, 36px 40px #ffffff, 40px 40px #ffffff, 44px 40px #ffffff, 48px 40px #ffffff, 52px 40px #ffffff, 56px 40px #ffffff, 60px 40px #ffffff, 64px 40px #ffffff, 0px 44px #ffffff, 4px 44px #ffffff, 28px 44px #ffffff, 32px 44px #ffffff, 36px 44px #ffffff, 40px 44px #ffffff, 44px 44px #ffffff, 48px 44px #ffffff, 52px 44px #ffffff, 56px 44px #ffffff, 60px 44px #ffffff, 64px 44px #ffffff, 68px 44px #ffffff, 72px 44px #ffffff, 0px 48px #ffffff, 4px 48px #ffffff, 8px 48px #ffffff, 24px 48px #ffffff, 28px 48px #ffffff, 32px 48px #ffffff, 36px 48px #ffffff, 40px 48px #ffffff, 44px 48px #ffffff, 48px 48px #ffffff, 52px 48px #ffffff, 56px 48px #ffffff, 60px 48px #ffffff, 64px 48px #ffffff, 72px 48px #ffffff, 0px 52px #ffffff, 4px 52px #ffffff, 8px 52px #ffffff, 12px 52px #ffffff, 16px 52px #ffffff, 20px 52px #ffffff, 24px 52px #ffffff, 28px 52px #ffffff, 32px 52px #ffffff, 36px 52px #ffffff, 40px 52px #ffffff, 44px 52px #ffffff, 48px 52px #ffffff, 52px 52px #ffffff, 56px 52px #ffffff, 60px 52px #ffffff, 64px 52px #ffffff, 0px 56px #ffffff, 4px 56px #ffffff, 8px 56px #ffffff, 12px 56px #ffffff, 16px 56px #ffffff, 20px 56px #ffffff, 24px 56px #ffffff, 28px 56px #ffffff, 32px 56px #ffffff, 36px 56px #ffffff, 40px 56px #ffffff, 44px 56px #ffffff, 48px 56px #ffffff, 52px 56px #ffffff, 56px 56px #ffffff, 60px 56px #ffffff, 64px 56px #ffffff, 4px 60px #ffffff, 8px 60px #ffffff, 12px 60px #ffffff, 16px 60px #ffffff, 20px 60px #ffffff, 24px 60px #ffffff, 28px 60px #ffffff, 32px 60px #ffffff, 36px 60px #ffffff, 40px 60px #ffffff, 44px 60px #ffffff, 48px 60px #ffffff, 52px 60px #ffffff, 56px 60px #ffffff, 60px 60px #ffffff, 64px 60px #ffffff, 8px 64px #ffffff, 12px 64px #ffffff, 16px 64px #ffffff, 20px 64px #ffffff, 24px 64px #ffffff, 28px 64px #ffffff, 32px 64px #ffffff, 36px 64px #ffffff, 40px 64px #ffffff, 44px 64px #ffffff, 48px 64px #ffffff, 52px 64px #ffffff, 56px 64px #ffffff, 60px 64px #ffffff, 12px 68px #ffffff, 16px 68px #ffffff, 20px 68px #ffffff, 24px 68px #ffffff, 28px 68px #ffffff, 32px 68px #ffffff, 36px 68px #ffffff, 40px 68px #ffffff, 44px 68px #ffffff, 48px 68px #ffffff, 52px 68px #ffffff, 56px 68px #ffffff, 16px 72px #ffffff, 20px 72px #ffffff, 24px 72px #ffffff, 28px 72px #ffffff, 32px 72px #ffffff, 36px 72px #ffffff, 40px 72px #ffffff, 44px 72px #ffffff, 48px 72px #ffffff, 52px 72px #ffffff, 20px 76px #ffffff, 24px 76px #ffffff, 28px 76px #ffffff, 32px 76px #ffffff, 36px 76px #ffffff, 40px 76px #ffffff, 44px 76px #ffffff, 48px 76px #ffffff, 24px 80px #ffffff, 28px 80px #ffffff, 32px 80px #ffffff, 44px 80px #ffffff, 48px 80px #ffffff, 52px 80px #ffffff, 24px 84px #ffffff, 28px 84px #ffffff, 24px 88px #ffffff, 24px 92px #ffffff, 28px 92px #ffffff;
-        }
-        66.66% {
-          box-shadow: 52px 0px #ffffff, 56px 0px #ffffff, 60px 0px #ffffff, 64px 0px #ffffff, 68px 0px #ffffff, 72px 0px #ffffff, 76px 0px #ffffff, 80px 0px #ffffff, 84px 0px #ffffff, 88px 0px #ffffff, 48px 4px #ffffff, 52px 4px #ffffff, 56px 4px #ffffff, 60px 4px #ffffff, 64px 4px #ffffff, 68px 4px #ffffff, 72px 4px #ffffff, 76px 4px #ffffff, 80px 4px #ffffff, 84px 4px #ffffff, 88px 4px #ffffff, 92px 4px #ffffff, 48px 8px #ffffff, 52px 8px #ffffff, 64px 8px #ffffff, 68px 8px #ffffff, 72px 8px #ffffff, 76px 8px #ffffff, 80px 8px #ffffff, 84px 8px #ffffff, 88px 8px #ffffff, 92px 8px #ffffff, 48px 12px #ffffff, 52px 12px #ffffff, 64px 12px #ffffff, 68px 12px #ffffff, 72px 12px #ffffff, 76px 12px #ffffff, 80px 12px #ffffff, 84px 12px #ffffff, 88px 12px #ffffff, 92px 12px #ffffff, 48px 16px #ffffff, 52px 16px #ffffff, 56px 16px #ffffff, 60px 16px #ffffff, 64px 16px #ffffff, 68px 16px #ffffff, 72px 16px #ffffff, 76px 16px #ffffff, 80px 16px #ffffff, 84px 16px #ffffff, 88px 16px #ffffff, 92px 16px #ffffff, 48px 20px #ffffff, 52px 20px #ffffff, 56px 20px #ffffff, 60px 20px #ffffff, 64px 20px #ffffff, 68px 20px #ffffff, 72px 20px #ffffff, 76px 20px #ffffff, 80px 20px #ffffff, 84px 20px #ffffff, 88px 20px #ffffff, 92px 20px #ffffff, 48px 24px #ffffff, 52px 24px #ffffff, 56px 24px #ffffff, 60px 24px #ffffff, 64px 24px #ffffff, 68px 24px #ffffff, 48px 28px #ffffff, 52px 28px #ffffff, 56px 28px #ffffff, 60px 28px #ffffff, 64px 28px #ffffff, 68px 28px #ffffff, 48px 32px #ffffff, 52px 32px #ffffff, 56px 32px #ffffff, 60px 32px #ffffff, 64px 32px #ffffff, 68px 32px #ffffff, 72px 32px #ffffff, 76px 32px #ffffff, 80px 32px #ffffff, 84px 32px #ffffff, 0px 36px #ffffff, 40px 36px #ffffff, 44px 36px #ffffff, 48px 36px #ffffff, 52px 36px #ffffff, 56px 36px #ffffff, 60px 36px #ffffff, 64px 36px #ffffff, 0px 40px #ffffff, 32px 40px #ffffff, 36px 40px #ffffff, 40px 40px #ffffff, 44px 40px #ffffff, 48px 40px #ffffff, 52px 40px #ffffff, 56px 40px #ffffff, 60px 40px #ffffff, 64px 40px #ffffff, 0px 44px #ffffff, 4px 44px #ffffff, 28px 44px #ffffff, 32px 44px #ffffff, 36px 44px #ffffff, 40px 44px #ffffff, 44px 44px #ffffff, 48px 44px #ffffff, 52px 44px #ffffff, 56px 44px #ffffff, 60px 44px #ffffff, 64px 44px #ffffff, 68px 44px #ffffff, 72px 44px #ffffff, 0px 48px #ffffff, 4px 48px #ffffff, 8px 48px #ffffff, 24px 48px #ffffff, 28px 48px #ffffff, 32px 48px #ffffff, 36px 48px #ffffff, 40px 48px #ffffff, 44px 48px #ffffff, 48px 48px #ffffff, 52px 48px #ffffff, 56px 48px #ffffff, 60px 48px #ffffff, 64px 48px #ffffff, 72px 48px #ffffff, 0px 52px #ffffff, 4px 52px #ffffff, 8px 52px #ffffff, 12px 52px #ffffff, 16px 52px #ffffff, 20px 52px #ffffff, 24px 52px #ffffff, 28px 52px #ffffff, 32px 52px #ffffff, 36px 52px #ffffff, 40px 52px #ffffff, 44px 52px #ffffff, 48px 52px #ffffff, 52px 52px #ffffff, 56px 52px #ffffff, 60px 52px #ffffff, 64px 52px #ffffff, 0px 56px #ffffff, 4px 56px #ffffff, 8px 56px #ffffff, 12px 56px #ffffff, 16px 56px #ffffff, 20px 56px #ffffff, 24px 56px #ffffff, 28px 56px #ffffff, 32px 56px #ffffff, 36px 56px #ffffff, 40px 56px #ffffff, 44px 56px #ffffff, 48px 56px #ffffff, 52px 56px #ffffff, 56px 56px #ffffff, 60px 56px #ffffff, 64px 56px #ffffff, 4px 60px #ffffff, 8px 60px #ffffff, 12px 60px #ffffff, 16px 60px #ffffff, 20px 60px #ffffff, 24px 60px #ffffff, 28px 60px #ffffff, 32px 60px #ffffff, 36px 60px #ffffff, 40px 60px #ffffff, 44px 60px #ffffff, 48px 60px #ffffff, 52px 60px #ffffff, 56px 60px #ffffff, 60px 60px #ffffff, 64px 60px #ffffff, 8px 64px #ffffff, 12px 64px #ffffff, 16px 64px #ffffff, 20px 64px #ffffff, 24px 64px #ffffff, 28px 64px #ffffff, 32px 64px #ffffff, 36px 64px #ffffff, 40px 64px #ffffff, 44px 64px #ffffff, 48px 64px #ffffff, 52px 64px #ffffff, 56px 64px #ffffff, 60px 64px #ffffff, 12px 68px #ffffff, 16px 68px #ffffff, 20px 68px #ffffff, 24px 68px #ffffff, 28px 68px #ffffff, 32px 68px #ffffff, 36px 68px #ffffff, 40px 68px #ffffff, 44px 68px #ffffff, 48px 68px #ffffff, 52px 68px #ffffff, 56px 68px #ffffff, 16px 72px #ffffff, 20px 72px #ffffff, 24px 72px #ffffff, 28px 72px #ffffff, 32px 72px #ffffff, 36px 72px #ffffff, 40px 72px #ffffff, 44px 72px #ffffff, 48px 72px #ffffff, 52px 72px #ffffff, 20px 76px #ffffff, 24px 76px #ffffff, 28px 76px #ffffff, 32px 76px #ffffff, 36px 76px #ffffff, 40px 76px #ffffff, 44px 76px #ffffff, 48px 76px #ffffff, 24px 80px #ffffff, 28px 80px #ffffff, 32px 80px #ffffff, 44px 80px #ffffff, 48px 80px #ffffff, 28px 84px #ffffff, 32px 84px #ffffff, 36px 84px #ffffff, 48px 84px #ffffff, 48px 88px #ffffff, 48px 92px #ffffff, 52px 92px #ffffff;
-        }
-      }
-      /*
-       * Identical tiers to StartupLoader.css. zoom resizes the sprite's own cells
-       * (4px / 3px / 2px at DPR 1) so the shell and React paint the same dinosaur
-       * at the same size at every width, and the container box shrinks with it.
-       * The entrance translate distances stay unscaled, so the dinosaur always
-       * begins fully outside the viewport.
-       */
-      @media (max-width: 767px) {
-        #startup-shell {
-          --dino-scale: 0.75;
-        }
-      }
-      @media (max-width: 479px) {
-        #startup-shell {
-          --dino-scale: 0.5;
-        }
-      }
-      .shell-dino-pixel {
-        zoom: var(--dino-scale, 1);
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .shell-dino-pixel {
-          animation: none !important;
-        }
-        .shell-dino-container {
-          animation: none !important;
-          transform: none !important;
-        }
-      }
     </style>
   </head>
   <body>
-    <!-- Pre-React Loading Shell (removed seamlessly by StartupLoader) -->
-    <div id="startup-shell" aria-hidden="true">
-      <div class="shell-dino-stage">
-        <div class="shell-dino-container">
-          <div class="shell-dino-pixel"></div>
-        </div>
-      </div>
-    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
