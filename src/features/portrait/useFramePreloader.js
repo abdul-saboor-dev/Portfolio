@@ -52,6 +52,10 @@ export function useFramePreloader() {
   useEffect(() => {
     const preloadOrder = buildPreloadOrder();
 
+    // Enqueue before the center load starts: on a warm cache the center resolves
+    // synchronously, and pumping an empty queue would strand the other 339 frames.
+    queueRef.current = preloadOrder.filter(idx => idx !== CENTER_IDX);
+
     // Tier 1: Load center frame immediately
     const centerImg = new Image();
     let centerHandled = false;
@@ -84,10 +88,6 @@ export function useFramePreloader() {
     if (centerImg.complete && centerImg.naturalWidth > 0) {
       onCenterSuccess();
     }
-
-    // Enqueue remaining frames in radial order (skip center)
-    queueRef.current = preloadOrder.filter(idx => idx !== CENTER_IDX);
-    // Don't start queue yet — wait for center to load and call processQueue
   }, [processQueue]);
 
   const getImage = useCallback((idx) => {
