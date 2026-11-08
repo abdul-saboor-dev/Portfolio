@@ -2,7 +2,7 @@
 
 A React + Vite foundation for a premium, experimental developer portfolio.
 
-The current implementation is a four-shot, scroll-scrubbed introduction sequence. It uses the supplied upper-body illustration as one continuous virtual camera pullback, coordinated through a single GSAP/ScrollTrigger timeline.
+The current implementation is a seven-sequence, scroll-scrubbed cinematic hero. It uses the supplied upper-body illustration as one continuous virtual camera pullback, coordinated with the name, three professional identities, creative statement, and exit composition through a single GSAP/ScrollTrigger timeline.
 
 ## Development
 

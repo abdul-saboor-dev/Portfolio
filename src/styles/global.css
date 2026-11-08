@@ -65,7 +65,7 @@ a:focus-visible {
 
 .intro-sequence {
   position: relative;
-  height: 430svh;
+  height: 920svh;
   background: var(--ink);
 }
 
@@ -81,7 +81,7 @@ a:focus-visible {
   position: sticky;
   top: 0;
   height: 100svh;
-  min-height: 34rem;
+  min-height: 0;
   overflow: clip;
   isolation: isolate;
   background: var(--ink);
@@ -97,86 +97,14 @@ a:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 
-.intro-stage__frame::before,
-.intro-stage__frame::after,
-.intro-stage__frame span {
+.intro-stage__frame::after {
   position: absolute;
+  top: 0;
+  right: 12%;
+  bottom: 0;
+  width: 1px;
   content: "";
   background: var(--line);
-}
-
-.intro-stage__frame::before {
-  top: 0;
-  bottom: 0;
-  left: 16%;
-  width: 1px;
-}
-
-.intro-stage__frame::after {
-  top: 0;
-  right: 11%;
-  bottom: 0;
-  width: 1px;
-}
-
-.intro-stage__frame span:first-child {
-  top: 18%;
-  right: 0;
-  left: 0;
-  height: 1px;
-}
-
-.intro-stage__frame span:last-child {
-  right: 0;
-  bottom: 12%;
-  left: 0;
-  height: 1px;
-}
-
-.intro-topline {
-  position: absolute;
-  z-index: 20;
-  top: clamp(2rem, 4vw, 3.8rem);
-  right: clamp(2rem, 4vw, 4.5rem);
-  left: clamp(2rem, 4vw, 4.5rem);
-  display: flex;
-  justify-content: space-between;
-  gap: 2rem;
-  color: var(--muted);
-  font-size: clamp(0.62rem, 0.75vw, 0.74rem);
-  letter-spacing: 0.18em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.intro-topline p {
-  margin: 0;
-}
-
-.intro-opening {
-  position: absolute;
-  z-index: 8;
-  bottom: clamp(5rem, 12vh, 8.5rem);
-  left: clamp(2rem, 7vw, 7.5rem);
-}
-
-.intro-opening__kicker {
-  margin: 0 0 0.85rem;
-  color: var(--warm);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.intro-opening__copy {
-  margin: 0;
-  color: var(--paper);
-  font-size: clamp(1.35rem, 2.25vw, 2.6rem);
-  font-weight: 600;
-  letter-spacing: -0.045em;
-  line-height: 0.98;
-  text-transform: uppercase;
 }
 
 .intro-portrait {
@@ -196,31 +124,24 @@ a:focus-visible {
 .intro-portrait--primary {
   top: 55%;
   left: 63%;
-  width: min(54vw, 78vh);
+  width: min(54vw, 78svh, 56rem);
   visibility: hidden;
-}
-
-.intro-identity {
-  position: absolute;
-  z-index: 5;
-  inset: 0;
-  pointer-events: none;
 }
 
 .intro-name {
   position: absolute;
-  z-index: 2;
-  top: 19%;
+  z-index: 3;
+  top: 17%;
   left: clamp(2rem, 5.2vw, 6rem);
   margin: 0;
   color: var(--paper);
-  font-size: clamp(5.6rem, 13.2vw, 13.6rem);
+  font-size: clamp(5.6rem, 13.2vw, 14rem);
   font-weight: 800;
   letter-spacing: -0.095em;
   line-height: 0.72;
   text-transform: uppercase;
   transform-origin: left top;
-  will-change: transform;
+  will-change: transform, opacity;
 }
 
 .intro-name__line {
@@ -231,6 +152,7 @@ a:focus-visible {
 
 .intro-name__line > span {
   display: block;
+  visibility: hidden;
   will-change: transform;
 }
 
@@ -238,21 +160,86 @@ a:focus-visible {
   color: var(--warm);
 }
 
+.intro-role-stack {
+  position: absolute;
+  z-index: 7;
+  right: clamp(2rem, 5vw, 6rem);
+  bottom: clamp(4rem, 11svh, 8rem);
+  width: min(45vw, 42rem);
+  height: clamp(4.5rem, 8vw, 7rem);
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .intro-role {
   position: absolute;
-  z-index: 6;
-  right: clamp(2rem, 6vw, 7rem);
-  bottom: clamp(5rem, 12vh, 8rem);
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   margin: 0;
-  padding: 0.45rem 0 0.45rem 1.2rem;
-  border-left: 0.32rem solid var(--warm);
   color: var(--paper);
-  font-size: clamp(1rem, 1.5vw, 1.5rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1;
+  font-size: clamp(2.1rem, 4.1vw, 4.6rem);
+  font-weight: 800;
+  letter-spacing: -0.065em;
+  line-height: 0.88;
+  text-align: right;
   text-transform: uppercase;
+  visibility: hidden;
   will-change: transform, opacity;
+}
+
+.intro-role::before {
+  display: block;
+  width: 0.32rem;
+  height: 0.72em;
+  margin-right: 0.35em;
+  content: "";
+  flex: 0 0 auto;
+  background: var(--warm);
+}
+
+.intro-role__word {
+  display: inline-block;
+}
+
+.intro-role__word + .intro-role__word {
+  margin-left: 0.22em;
+}
+
+.intro-statement {
+  position: absolute;
+  z-index: 8;
+  top: 18%;
+  left: clamp(2rem, 5vw, 6rem);
+  width: min(68vw, 62rem);
+  margin: 0;
+  color: var(--paper);
+  font-size: clamp(3.6rem, 6.6vw, 8rem);
+  font-weight: 800;
+  letter-spacing: -0.075em;
+  line-height: 0.88;
+  text-transform: uppercase;
+  visibility: hidden;
+  transform-origin: left top;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.intro-statement__line {
+  display: block;
+  overflow: hidden;
+  padding-right: 0.1em;
+}
+
+.intro-statement__line > span {
+  display: block;
+  visibility: hidden;
+  will-change: transform;
+}
+
+.intro-statement__line:last-child > span {
+  color: var(--warm);
 }
 
 .intro-scroll-cue {
@@ -276,110 +263,259 @@ a:focus-visible {
   background: var(--warm);
 }
 
-.intro-shot-index {
-  position: absolute;
-  z-index: 20;
-  right: clamp(2rem, 4vw, 4.5rem);
-  top: 22%;
-  width: 2.2rem;
-  height: 1rem;
-  color: var(--warm);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-}
-
-.intro-shot-index span {
-  position: absolute;
-  inset: 0;
-  visibility: hidden;
-}
-
 .intro-exit-rule {
   position: absolute;
-  z-index: 9;
-  top: 28%;
-  right: 22%;
+  z-index: 6;
+  top: 22%;
+  right: 34%;
   width: 1px;
-  height: 48%;
+  height: 52%;
   background: var(--warm);
   will-change: transform;
 }
 
-@media (max-width: 767px) {
-  .intro-sequence {
-    height: 390svh;
+@media (min-width: 1440px) {
+  .intro-stage__frame {
+    inset: clamp(2rem, 2.5vw, 3rem);
   }
 
-  .intro-stage {
-    min-height: 31rem;
+  .intro-portrait--primary {
+    width: min(48vw, 78svh, 56rem);
+  }
+
+  .intro-role-stack {
+    width: min(42vw, 46rem);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .intro-sequence {
+    height: 940svh;
   }
 
   .intro-stage__frame {
-    inset: 0.85rem;
-  }
-
-  .intro-stage__frame::before {
-    left: 22%;
+    inset: 1.25rem;
   }
 
   .intro-stage__frame::after {
-    right: 9%;
+    right: 16%;
   }
 
-  .intro-topline {
-    top: 1.65rem;
-    right: 1.35rem;
-    left: 1.35rem;
-    font-size: 0.55rem;
-    letter-spacing: 0.14em;
+  .intro-portrait--primary {
+    top: 56%;
+    left: 60%;
+    width: min(72vw, 76svh);
   }
 
-  .intro-opening {
-    bottom: 7.5rem;
-    left: 1.35rem;
+  .intro-name {
+    top: 15%;
+    left: 4vw;
+    font-size: clamp(5rem, 12.5vw, 8rem);
   }
 
-  .intro-opening__copy {
-    font-size: clamp(1.25rem, 6vw, 1.7rem);
+  .intro-role-stack {
+    right: 4vw;
+    bottom: 8svh;
+    width: 58vw;
+  }
+
+  .intro-role {
+    font-size: clamp(2rem, 5.3vw, 3.7rem);
+  }
+
+  .intro-statement {
+    top: 16%;
+    left: 4vw;
+    width: 72vw;
+    font-size: clamp(3.2rem, 7.7vw, 5.5rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .intro-sequence {
+    height: 980svh;
+  }
+
+  .intro-stage__frame {
+    inset: 0.75rem;
+  }
+
+  .intro-stage__frame::after {
+    right: 10%;
   }
 
   .intro-portrait--primary {
     top: 57%;
     left: 55%;
-    width: min(112vw, 68vh);
+    width: min(112vw, 70svh);
   }
 
   .intro-name {
-    top: 20%;
-    left: 1.2rem;
-    font-size: clamp(4.6rem, 23vw, 7.3rem);
-    line-height: 0.74;
+    top: 11%;
+    left: 1.1rem;
+    max-width: calc(100vw - 2.2rem);
+    font-size: clamp(3.8rem, 21vw, 6.3rem);
+    line-height: 0.76;
+  }
+
+  .intro-role-stack {
+    right: 1.15rem;
+    bottom: 8svh;
+    left: 1.15rem;
+    width: auto;
+    height: clamp(5.6rem, 24vw, 7.2rem);
   }
 
   .intro-role {
-    right: auto;
-    bottom: 5rem;
-    left: 1.35rem;
-    font-size: 0.8rem;
+    display: block;
+    font-size: clamp(1.65rem, 9vw, 2.7rem);
+    line-height: 0.86;
+    text-align: left;
+  }
+
+  .intro-role::before {
+    display: inline-block;
+    width: 0.24rem;
+    height: 0.72em;
+    margin: 0 0.35em 0 0;
+    vertical-align: 0.04em;
+  }
+
+  .intro-role__word {
+    display: block;
+    margin-left: 0.55rem;
+  }
+
+  .intro-role__word + .intro-role__word {
+    margin-left: 0.55rem;
+  }
+
+  .intro-statement {
+    top: 14%;
+    left: 1.15rem;
+    width: calc(100vw - 2.3rem);
+    font-size: clamp(2.05rem, 10.8vw, 4rem);
+    line-height: 0.92;
   }
 
   .intro-scroll-cue {
-    right: 1.35rem;
-    bottom: 2rem;
+    right: auto;
+    bottom: 1.6rem;
+    left: 1.25rem;
+    font-size: 0.56rem;
   }
 
-  .intro-scroll-cue span {
-    display: none;
-  }
-
-  .intro-shot-index {
-    top: 20%;
-    right: 1.25rem;
+  .intro-scroll-cue i {
+    width: 3rem;
   }
 
   .intro-exit-rule {
-    right: 20%;
+    top: 33%;
+    right: 18%;
+    height: 40%;
+  }
+}
+
+@media (max-width: 360px) {
+  .intro-portrait--primary {
+    width: min(120vw, 72svh);
+  }
+
+  .intro-name {
+    font-size: clamp(3.65rem, 20vw, 4.5rem);
+  }
+
+  .intro-role-stack {
+    height: 5.8rem;
+  }
+
+  .intro-role {
+    font-size: clamp(1.5rem, 8.6vw, 2rem);
+  }
+
+  .intro-statement {
+    font-size: clamp(1.95rem, 10.2vw, 2.6rem);
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 650px) {
+  .intro-portrait--primary {
+    top: 56%;
+    width: min(48vw, 75svh, 50rem);
+  }
+
+  .intro-name {
+    top: 12%;
+    font-size: clamp(5rem, 11vw, 9.5rem);
+  }
+
+  .intro-role-stack {
+    bottom: 7svh;
+  }
+
+  .intro-statement {
+    top: 14%;
+    font-size: clamp(3rem, 6vw, 6rem);
+  }
+}
+
+@media (max-width: 1023px) and (max-height: 600px) and (orientation: landscape) {
+  .intro-stage__frame {
+    inset: 0.65rem;
+  }
+
+  .intro-portrait--primary {
+    top: 58%;
+    left: 62%;
+    width: min(70vw, 112svh);
+  }
+
+  .intro-name {
+    top: 9%;
+    left: 2vw;
+    font-size: clamp(3rem, 10vw, 5rem);
+  }
+
+  .intro-role-stack {
+    right: 3vw;
+    bottom: 7svh;
+    left: auto;
+    width: 48vw;
+    height: 4rem;
+  }
+
+  .intro-role {
+    display: flex;
+    font-size: clamp(1.4rem, 4.8vw, 2.45rem);
+    text-align: right;
+  }
+
+  .intro-role__word {
+    display: inline-block;
+    margin-left: 0;
+  }
+
+  .intro-role__word + .intro-role__word {
+    margin-left: 0.2em;
+  }
+
+  .intro-statement {
+    top: 12%;
+    left: 3vw;
+    width: 57vw;
+    font-size: clamp(2rem, 5.7vw, 4.2rem);
+  }
+
+  .intro-scroll-cue {
+    right: 1.25rem;
+    bottom: 1rem;
+    left: auto;
+  }
+
+  .intro-exit-rule {
+    top: 22%;
+    right: 29%;
+    height: 52%;
   }
 }
 
@@ -392,21 +528,85 @@ a:focus-visible {
     position: relative;
   }
 
-  .intro-opening,
   .intro-scroll-cue,
   .intro-exit-rule {
     display: none;
   }
 
-  .intro-portrait--primary {
+  .intro-portrait--primary,
+  .intro-name,
+  .intro-name__line > span,
+  .intro-role,
+  .intro-statement,
+  .intro-statement__line > span {
     visibility: visible;
     opacity: 1;
   }
 
-  .intro-name__line > span,
+  .intro-name {
+    top: 7%;
+    font-size: clamp(3rem, 7vw, 7rem);
+  }
+
+  .intro-role-stack {
+    right: 4vw;
+    bottom: 6svh;
+    display: grid;
+    gap: 0.35rem;
+    width: min(34vw, 30rem);
+    height: auto;
+    overflow: visible;
+  }
+
   .intro-role {
-    visibility: visible;
-    opacity: 1;
-    transform: none;
+    position: static;
+    display: block;
+    font-size: clamp(1rem, 1.5vw, 1.45rem);
+    letter-spacing: 0.05em;
+    line-height: 1;
+    text-align: left;
+  }
+
+  .intro-role::before {
+    display: inline-block;
+    width: 0.2rem;
+    margin-right: 0.5rem;
+    vertical-align: -0.05em;
+  }
+
+  .intro-statement {
+    top: 38%;
+    width: 48vw;
+    font-size: clamp(1.9rem, 3.4vw, 4rem);
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .intro-name {
+    top: 6%;
+    font-size: 15.5vw;
+  }
+
+  .intro-statement {
+    top: 35%;
+    width: calc(100vw - 2.3rem);
+    font-size: 7.8vw;
+  }
+
+  .intro-role-stack {
+    right: auto;
+    bottom: 4svh;
+    left: 1.15rem;
+    width: 62vw;
+  }
+
+  .intro-role {
+    font-size: 4.2vw;
+  }
+
+  .intro-role__word,
+  .intro-role__word + .intro-role__word {
+    display: inline;
+    margin-left: 0;
   }
 }
