@@ -1,0 +1,224 @@
+:root {
+  color: #f1eee8;
+  background: #101010;
+  font-family: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: #101010;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: #101010;
+}
+
+button,
+a {
+  color: inherit;
+}
+
+a:focus-visible {
+  outline: 2px solid #d7ff3f;
+  outline-offset: 5px;
+}
+
+.site-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 0.5px), #242424 calc(50% - 0.5px), #242424 calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    #101010;
+}
+
+.site-header {
+  position: absolute;
+  z-index: 2;
+  top: clamp(1.25rem, 3vw, 2.5rem);
+  right: clamp(1.25rem, 4vw, 4rem);
+  left: clamp(1.25rem, 4vw, 4rem);
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  color: #8f8b84;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.site-header p {
+  margin: 0;
+}
+
+.site-header__status {
+  text-align: right;
+}
+
+.skip-link {
+  position: absolute;
+  z-index: 3;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  color: #101010;
+  background: #d7ff3f;
+  font-size: 0.8rem;
+  transform: translateY(-150%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.scene-frame {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(6rem, 0.6fr) minmax(0, 2.4fr);
+  gap: clamp(1.5rem, 5vw, 6rem);
+  align-items: end;
+  min-height: 100vh;
+  padding: clamp(7rem, 14vw, 11rem) clamp(1.25rem, 8vw, 9rem) clamp(2.5rem, 7vw, 6rem);
+}
+
+.scene-frame::before,
+.scene-frame::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+
+.scene-frame::before {
+  top: 16%;
+  right: 8vw;
+  width: 1px;
+  height: 58%;
+  background: #30302f;
+}
+
+.scene-frame::after {
+  right: 8vw;
+  bottom: 16%;
+  left: 8vw;
+  height: 1px;
+  background: #30302f;
+}
+
+.scene-frame__eyebrow {
+  align-self: start;
+  max-width: 8rem;
+  padding-top: 0.5rem;
+  color: #d7ff3f;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.scene-frame__title {
+  position: relative;
+  z-index: 1;
+  max-width: 8ch;
+  margin: 0;
+  color: #f1eee8;
+  font-size: clamp(4.5rem, 15vw, 13rem);
+  font-weight: 800;
+  letter-spacing: -0.09em;
+  line-height: 0.8;
+  text-transform: uppercase;
+}
+
+.scene-frame__title em {
+  color: #d7ff3f;
+  font-style: normal;
+}
+
+.intro-scene__content {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: minmax(12rem, 20rem) 1fr;
+  gap: 1rem clamp(1rem, 5vw, 5rem);
+  align-items: end;
+  max-width: 44rem;
+  margin-top: clamp(2rem, 8vw, 5rem);
+}
+
+.intro-scene__content p {
+  max-width: 19rem;
+  margin: 0;
+  color: #c1bdb6;
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  line-height: 1.25;
+}
+
+.intro-scene__rule {
+  width: 100%;
+  height: 1px;
+  background: #d7ff3f;
+}
+
+.intro-scene__note {
+  grid-column: 1 / -1;
+  color: #6f6c66 !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.12em;
+  line-height: 1.4 !important;
+  text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .site-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .site-header__status {
+    text-align: left;
+  }
+
+  .scene-frame {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-top: 10rem;
+  }
+
+  .scene-frame__eyebrow,
+  .intro-scene__content {
+    grid-column: 1;
+  }
+
+  .scene-frame__title {
+    max-width: 7ch;
+  }
+
+  .intro-scene__content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .intro-scene__note {
+    grid-column: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
