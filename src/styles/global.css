@@ -274,6 +274,149 @@ a:focus-visible {
   will-change: transform;
 }
 
+.about-sequence {
+  position: relative;
+  z-index: 10;
+  height: 760svh;
+  margin-top: -100svh;
+  color: var(--about-fg);
+}
+
+.about-sequence__end {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.about-stage {
+  --about-bg: rgba(11, 10, 10, 0);
+  --about-fg: #f4efe8;
+  --about-accent: #c77b59;
+  --about-rule: #37302b;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 0;
+  overflow: clip;
+  isolation: isolate;
+  color: var(--about-fg);
+  background-color: var(--about-bg);
+}
+
+.about-stage__frame {
+  position: absolute;
+  z-index: 1;
+  inset: clamp(1rem, 2.2vw, 2rem);
+  pointer-events: none;
+  border-top: 1px solid var(--about-rule);
+  border-bottom: 1px solid var(--about-rule);
+}
+
+.about-stage__frame::after {
+  position: absolute;
+  top: 0;
+  right: 12%;
+  bottom: 0;
+  width: 1px;
+  content: "";
+  background: var(--about-rule);
+}
+
+.about-headline-wrap {
+  position: absolute;
+  z-index: 4;
+  top: 11%;
+  left: clamp(2rem, 5vw, 6rem);
+  width: min(82vw, 92rem);
+}
+
+.about-headline {
+  margin: 0;
+  color: var(--about-fg);
+  font-size: clamp(4.8rem, 7.4vw, 9rem);
+  font-weight: 800;
+  letter-spacing: -0.075em;
+  line-height: 0.84;
+  text-transform: uppercase;
+  will-change: transform, opacity;
+}
+
+.about-headline__line {
+  display: block;
+  overflow: hidden;
+  padding-right: 0.1em;
+}
+
+.about-headline__line > span {
+  display: block;
+  visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.about-headline__line:nth-child(2) > span {
+  color: var(--about-accent);
+}
+
+.about-stories {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+}
+
+.about-story {
+  position: absolute;
+  width: min(62vw, 68rem);
+  margin: 0;
+  color: var(--about-fg);
+  font-size: clamp(1.45rem, 2.15vw, 2.45rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.16;
+  visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.about-story--who {
+  top: 22%;
+  left: 8vw;
+}
+
+.about-story--journey {
+  top: 21%;
+  right: 8vw;
+}
+
+.about-story--philosophy {
+  top: 19%;
+  left: 12vw;
+  width: min(68vw, 74rem);
+  font-size: clamp(1.7rem, 2.55vw, 3rem);
+  line-height: 1.12;
+}
+
+.about-rule {
+  position: absolute;
+  z-index: 3;
+  background: var(--about-accent);
+  will-change: transform;
+}
+
+.about-rule--handoff {
+  top: 22%;
+  right: 34%;
+  width: 1px;
+  height: 52%;
+}
+
+.about-rule--closing {
+  right: 8vw;
+  bottom: 13%;
+  left: 55vw;
+  height: 0.3rem;
+}
+
 @media (min-width: 1440px) {
   .intro-stage__frame {
     inset: clamp(2rem, 2.5vw, 3rem);
@@ -285,6 +428,10 @@ a:focus-visible {
 
   .intro-role-stack {
     width: min(42vw, 46rem);
+  }
+
+  .about-stage__frame {
+    inset: clamp(2rem, 2.5vw, 3rem);
   }
 }
 
@@ -328,6 +475,38 @@ a:focus-visible {
     left: 4vw;
     width: 72vw;
     font-size: clamp(3.2rem, 7.7vw, 5.5rem);
+  }
+
+  .about-sequence {
+    height: 800svh;
+  }
+
+  .about-stage__frame {
+    inset: 1.25rem;
+  }
+
+  .about-stage__frame::after {
+    right: 16%;
+  }
+
+  .about-headline-wrap {
+    top: 12%;
+    left: 4vw;
+    width: 88vw;
+  }
+
+  .about-headline {
+    font-size: clamp(4rem, 8.8vw, 6.5rem);
+  }
+
+  .about-story,
+  .about-story--philosophy {
+    top: 18%;
+    right: auto;
+    left: 7vw;
+    width: 78vw;
+    font-size: clamp(1.4rem, 2.8vw, 2rem);
+    line-height: 1.18;
   }
 }
 
@@ -414,6 +593,62 @@ a:focus-visible {
     right: 18%;
     height: 40%;
   }
+
+  .about-sequence {
+    height: 860svh;
+  }
+
+  .about-stage__frame {
+    inset: 0.75rem;
+  }
+
+  .about-stage__frame::after {
+    right: 10%;
+  }
+
+  .about-headline-wrap {
+    top: 10%;
+    left: 1.15rem;
+    width: calc(100vw - 2.3rem);
+  }
+
+  .about-headline {
+    font-size: clamp(2.3rem, 12.2vw, 4.5rem);
+    line-height: 0.9;
+  }
+
+  .about-headline__line {
+    overflow: visible;
+    margin-bottom: 0.08em;
+  }
+
+  .about-story,
+  .about-story--philosophy {
+    top: 15%;
+    right: auto;
+    left: 1.15rem;
+    width: calc(100vw - 3rem);
+    font-size: clamp(1.04rem, 4.75vw, 1.35rem);
+    line-height: 1.22;
+  }
+
+  .about-story--philosophy {
+    font-size: clamp(1.12rem, 5.1vw, 1.5rem);
+    line-height: 1.2;
+  }
+
+  .about-rule--handoff {
+    top: 33%;
+    right: 18%;
+    height: 40%;
+  }
+
+  .about-rule--closing {
+    right: 1.15rem;
+    bottom: 12%;
+    left: 34vw;
+    height: 0.22rem;
+  }
 }
 
 @media (max-width: 360px) {
@@ -456,6 +691,21 @@ a:focus-visible {
   .intro-statement {
     top: 14%;
     font-size: clamp(3rem, 6vw, 6rem);
+  }
+
+  .about-headline-wrap {
+    top: 8%;
+  }
+
+  .about-headline {
+    font-size: clamp(3.8rem, 6.4vw, 6.5rem);
+  }
+
+  .about-story,
+  .about-story--philosophy {
+    top: 13%;
+    font-size: clamp(1.2rem, 1.9vw, 1.8rem);
+    line-height: 1.12;
   }
 }
 
@@ -513,6 +763,36 @@ a:focus-visible {
   }
 
   .intro-exit-rule {
+    top: 22%;
+    right: 29%;
+    height: 52%;
+  }
+
+  .about-stage__frame {
+    inset: 0.65rem;
+  }
+
+  .about-headline-wrap {
+    top: 7%;
+    left: 3vw;
+    width: 70vw;
+  }
+
+  .about-headline {
+    font-size: clamp(2.4rem, 6.4vw, 4.5rem);
+    line-height: 0.84;
+  }
+
+  .about-story,
+  .about-story--philosophy {
+    top: 10%;
+    left: 3vw;
+    width: 69vw;
+    font-size: clamp(0.9rem, 2.45vw, 1.35rem);
+    line-height: 1.12;
+  }
+
+  .about-rule--handoff {
     top: 22%;
     right: 29%;
     height: 52%;
@@ -578,6 +858,60 @@ a:focus-visible {
     top: 38%;
     width: 48vw;
     font-size: clamp(1.9rem, 3.4vw, 4rem);
+  }
+
+  .about-sequence {
+    height: auto;
+    margin-top: 0;
+  }
+
+  .about-stage {
+    position: relative;
+    height: auto;
+    min-height: 100svh;
+    padding: clamp(5rem, 8vw, 8rem) clamp(1.25rem, 7vw, 7rem);
+    color: #211714;
+    background: #e7d7c4;
+  }
+
+  .about-stage__frame,
+  .about-rule {
+    display: none;
+  }
+
+  .about-headline-wrap,
+  .about-stories,
+  .about-story,
+  .about-story--philosophy {
+    position: static;
+    width: auto;
+  }
+
+  .about-headline-wrap {
+    margin-bottom: clamp(3rem, 7vw, 6rem);
+  }
+
+  .about-headline {
+    color: #211714;
+    font-size: clamp(2.8rem, 7vw, 7rem);
+  }
+
+  .about-headline__line > span,
+  .about-story {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .about-headline__line:nth-child(2) > span {
+    color: #9d4d34;
+  }
+
+  .about-story,
+  .about-story--philosophy {
+    margin-bottom: clamp(2rem, 5vw, 4rem);
+    color: #211714;
+    font-size: clamp(1.1rem, 2vw, 1.6rem);
+    line-height: 1.35;
   }
 }
 
