@@ -2,7 +2,7 @@
 
 A React + Vite foundation for a premium, experimental developer portfolio.
 
-The experience is intentionally starting small: one accessible introduction scene, with clear boundaries for future narrative scenes, illustrated assets, and GSAP/ScrollTrigger choreography.
+The current implementation is a four-shot, scroll-scrubbed introduction sequence. It uses the supplied illustrated portrait assets, a deliberate editorial cut between portrait crops, and a single coordinated GSAP/ScrollTrigger timeline.
 
 ## Development
 
@@ -29,4 +29,4 @@ src/
 └── styles/     # Global tokens, layout, and scene styling
 ```
 
-The six-act narrative is represented in configuration, but only the introduction is rendered until the content and artwork for later acts are defined.
+The six-act narrative is represented in configuration, but only the introduction is rendered until the content and artwork for later acts are defined. Reduced-motion visitors receive the final identity composition without the long scroll sequence.
