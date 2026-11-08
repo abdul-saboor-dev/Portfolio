@@ -122,42 +122,42 @@ export function createIntroTimeline({ scene, conditions }) {
 
   timeline
     .addLabel('encounter', 0)
-    .to(portrait, { ...setCamera(portrait, profile.approach), duration: 1.7 }, 0)
-    .to(scrollCue, { autoAlpha: 0, y: '2vh', duration: 0.48 }, 0.58)
-    .addLabel('pullback', 1.35)
-    .to(portrait, { ...setCamera(portrait, profile.pullback), duration: 1.95 }, 1.35)
-    .addLabel('identity', 3.1)
+    .to(portrait, { ...setCamera(portrait, profile.approach), duration: 2.4 }, 0)
+    .to(scrollCue, { autoAlpha: 0, y: '2vh', duration: 0.65 }, 0.95)
+    .addLabel('pullback', 2.15)
+    .to(portrait, { ...setCamera(portrait, profile.pullback), duration: 3 }, 2.15)
+    .addLabel('identity', 5)
     .to(
       name,
       {
         autoAlpha: 1,
         xPercent: 0,
         scale: 1,
-        duration: 0.9,
+        duration: 1.1,
         ease: 'power3.out',
       },
-      3.1,
+      5.1,
     )
     .to(
       portrait,
       {
         ...setCamera(portrait, profile.identity),
-        duration: 1.55,
+        duration: 2.2,
         ease: 'power2.inOut',
       },
-      2.95,
+      4.85,
     )
-    .addLabel('webDeveloper', 4.25)
+    .addLabel('webDeveloper', 7)
     .to(
       webRole,
       {
         autoAlpha: 1,
         xPercent: 0,
         scale: 1,
-        duration: 0.65,
+        duration: 0.85,
         ease: 'power3.out',
       },
-      4.25,
+      7,
     )
     .to(
       webRole,
@@ -165,22 +165,22 @@ export function createIntroTimeline({ scene, conditions }) {
         autoAlpha: 0,
         xPercent: 125,
         scale: 0.78,
-        duration: 0.55,
-        ease: 'power3.in',
+        duration: 0.65,
+        ease: 'power2.inOut',
       },
-      5.7,
+      9.25,
     )
-    .addLabel('creativeDesigner', 5.95)
+    .addLabel('creativeDesigner', 9.85)
     .to(
       creativeRole,
       {
         autoAlpha: 1,
         yPercent: 0,
         scale: 1,
-        duration: 0.68,
+        duration: 0.85,
         ease: 'power3.out',
       },
-      5.95,
+      9.85,
     )
     .to(
       creativeRole,
@@ -188,22 +188,22 @@ export function createIntroTimeline({ scene, conditions }) {
         autoAlpha: 0,
         yPercent: -135,
         scale: 1.2,
-        duration: 0.55,
-        ease: 'power3.in',
+        duration: 0.65,
+        ease: 'power2.inOut',
       },
-      7.4,
+      12.1,
     )
-    .addLabel('problemSolver', 7.65)
+    .addLabel('problemSolver', 12.7)
     .to(
       problemRole,
       {
         autoAlpha: 1,
         xPercent: 0,
         scale: 1,
-        duration: 0.68,
+        duration: 0.85,
         ease: 'power3.out',
       },
-      7.65,
+      12.7,
     )
     .to(
       problemRole,
@@ -211,10 +211,10 @@ export function createIntroTimeline({ scene, conditions }) {
         autoAlpha: 0,
         xPercent: -115,
         scale: 0.8,
-        duration: 0.56,
-        ease: 'power3.in',
+        duration: 0.68,
+        ease: 'power2.inOut',
       },
-      9.1,
+      14.95,
     )
     .to(
       name,
@@ -223,20 +223,20 @@ export function createIntroTimeline({ scene, conditions }) {
         x: conditions.isMobile ? '-8vw' : '-5vw',
         y: conditions.isMobile ? '-8vh' : '-10vh',
         scale: 1.08,
-        duration: 0.75,
-        ease: 'power3.in',
+        duration: 0.9,
+        ease: 'power2.inOut',
       },
-      9,
+      14.8,
     )
-    .addLabel('statement', 9.45)
+    .addLabel('statement', 15.3)
     .to(
       portrait,
       {
         ...setCamera(portrait, profile.statement),
-        duration: 1.35,
+        duration: 1.9,
         ease: 'power2.inOut',
       },
-      9.25,
+      15.05,
     )
     .to(
       statement,
@@ -244,20 +244,20 @@ export function createIntroTimeline({ scene, conditions }) {
         autoAlpha: 1,
         xPercent: 0,
         scale: 1,
-        duration: 0.86,
+        duration: 1.05,
         ease: 'power3.out',
       },
-      9.45,
+      15.3,
     )
-    .addLabel('exit', 11.6)
+    .addLabel('exit', 17.2)
     .to(
       portrait,
       {
         ...setCamera(portrait, profile.exit),
-        duration: 1.65,
+        duration: 1.5,
         ease: 'power2.inOut',
       },
-      11.6,
+      17.2,
     )
     .to(
       statement,
@@ -265,12 +265,12 @@ export function createIntroTimeline({ scene, conditions }) {
         x: conditions.isMobile ? '-4vw' : '5vw',
         y: conditions.isMobile ? '-12vh' : '-7vh',
         scale: conditions.isMobile ? 0.76 : 0.8,
-        duration: 1.65,
+        duration: 1.5,
         ease: 'power2.inOut',
       },
-      11.6,
+      17.2,
     )
-    .to(exitRule, { scaleY: 1, duration: 1.1, ease: 'power3.inOut' }, 11.9);
+    .to(exitRule, { scaleY: 1, duration: 1.1, ease: 'power3.inOut' }, 17.45);
 
   return () => {
     timeline.scrollTrigger?.kill();

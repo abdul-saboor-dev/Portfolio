@@ -16,12 +16,14 @@
 }
 
 html {
-  min-width: 320px;
+  width: 100%;
+  min-width: 0;
   background: var(--ink);
 }
 
 body {
-  min-width: 320px;
+  width: 100%;
+  min-width: 0;
   min-height: 100vh;
   margin: 0;
   overflow-x: clip;
@@ -65,7 +67,7 @@ a:focus-visible {
 
 .intro-sequence {
   position: relative;
-  height: 920svh;
+  height: 1300svh;
   background: var(--ink);
 }
 
@@ -277,8 +279,8 @@ a:focus-visible {
 .about-sequence {
   position: relative;
   z-index: 10;
-  height: 900svh;
-  margin-top: -100svh;
+  height: 1900svh;
+  margin-top: -180svh;
   color: var(--about-fg);
 }
 
@@ -367,7 +369,7 @@ a:focus-visible {
 
 .about-story {
   position: absolute;
-  width: min(78vw, 78rem);
+  width: min(72vw, 72rem);
   margin: 0;
   color: var(--about-fg);
   visibility: hidden;
@@ -377,7 +379,7 @@ a:focus-visible {
 .about-story__heading {
   margin: 0 0 clamp(1.35rem, 2.5vw, 2.75rem);
   color: var(--about-accent);
-  font-size: clamp(4.5rem, 8.2vw, 9.5rem);
+  font-size: clamp(5rem, 9vw, 10rem);
   font-weight: 800;
   letter-spacing: -0.075em;
   line-height: 0.8;
@@ -385,10 +387,10 @@ a:focus-visible {
 }
 
 .about-story__copy {
-  max-width: 72rem;
+  max-width: 65rem;
   margin: 0;
   font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(2rem, 2.55vw, 2.75rem);
+  font-size: clamp(2.2rem, 2.8vw, 3rem);
   font-weight: 500;
   letter-spacing: -0.026em;
   line-height: 1.32;
@@ -404,17 +406,17 @@ a:focus-visible {
 .about-story--journey {
   top: 13%;
   right: 6vw;
-  width: min(74vw, 74rem);
+  width: min(68vw, 68rem);
 }
 
 .about-story--philosophy {
   top: 10%;
   left: 9vw;
-  width: min(76vw, 76rem);
+  width: min(70vw, 70rem);
 }
 
 .about-story--philosophy .about-story__copy {
-  font-size: clamp(2.05rem, 2.7vw, 2.9rem);
+  font-size: clamp(2.3rem, 3vw, 3.2rem);
 }
 
 .about-rule {
@@ -458,7 +460,7 @@ a:focus-visible {
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .intro-sequence {
-    height: 940svh;
+    height: 1380svh;
   }
 
   .intro-stage__frame {
@@ -499,7 +501,7 @@ a:focus-visible {
   }
 
   .about-sequence {
-    height: 940svh;
+    height: 2050svh;
   }
 
   .about-stage__frame {
@@ -558,7 +560,7 @@ a:focus-visible {
 
 @media (max-width: 767px) {
   .intro-sequence {
-    height: 980svh;
+    height: 1450svh;
   }
 
   .intro-stage__frame {
@@ -641,7 +643,7 @@ a:focus-visible {
   }
 
   .about-sequence {
-    height: 1020svh;
+    height: 2200svh;
   }
 
   .about-stage__frame {
@@ -676,12 +678,12 @@ a:focus-visible {
 
   .about-story__heading {
     margin-bottom: clamp(1.1rem, 5vw, 1.75rem);
-    font-size: clamp(3.4rem, 17vw, 5.8rem);
+    font-size: clamp(3.6rem, 18vw, 6.2rem);
   }
 
   .about-story__copy,
   .about-story--philosophy .about-story__copy {
-    font-size: clamp(1.3rem, 6vw, 1.6rem);
+    font-size: clamp(1.35rem, 6.5vw, 1.72rem);
     line-height: 1.36;
     letter-spacing: -0.022em;
   }
@@ -741,6 +743,14 @@ a:focus-visible {
 }
 
 @media (min-width: 1024px) and (max-height: 650px) {
+  .intro-sequence {
+    height: max(1300svh, 7800px);
+  }
+
+  .about-sequence {
+    height: max(1900svh, 10200px);
+  }
+
   .intro-portrait--primary {
     top: 56%;
     width: min(48vw, 75svh, 50rem);
@@ -771,32 +781,40 @@ a:focus-visible {
   .about-story,
   .about-story--philosophy {
     top: 5%;
-    width: 76vw;
+    width: 68vw;
   }
 
   .about-story__heading {
     margin-bottom: 1rem;
-    font-size: clamp(3rem, 7vw, 5rem);
+    font-size: clamp(4rem, 8vw, 6rem);
   }
 
   .about-story__copy,
   .about-story--philosophy .about-story__copy {
-    font-size: clamp(1.25rem, 1.8vw, 1.6rem);
-    line-height: 1.28;
+    font-size: clamp(1.35rem, 2.1vw, 1.8rem);
+    line-height: 1.3;
   }
 
   .about-story--journey {
     top: 6%;
-    width: 72vw;
+    width: 64vw;
   }
 
   .about-story--philosophy {
     top: 5%;
-    width: 74vw;
+    width: 66vw;
   }
 }
 
 @media (max-width: 1023px) and (max-height: 600px) and (orientation: landscape) {
+  .intro-sequence {
+    height: max(1380svh, 7000px);
+  }
+
+  .about-sequence {
+    height: max(2050svh, 10500px);
+  }
+
   .intro-stage__frame {
     inset: 0.65rem;
   }

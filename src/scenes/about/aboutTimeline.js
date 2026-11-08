@@ -89,29 +89,29 @@ export function createAboutTimeline({ scene, conditions }) {
 
   timeline
     .addLabel('handoff', 0)
-    .to(stage, { ...colorVars(COLORS.headline), duration: 1.8 }, 0)
+    .to(stage, { ...colorVars(COLORS.headline), duration: 2.4 }, 0)
     .to(
       handoffRule,
       {
         x: mobile ? '-10vw' : '-8vw',
         scaleY: 0.72,
-        duration: 1.8,
+        duration: 2.4,
         ease: 'power2.inOut',
       },
       0,
     )
-    .addLabel('headline', 0.72)
+    .addLabel('headline', 1)
     .to(
       headlineLines,
       {
         autoAlpha: 1,
         yPercent: 0,
         scale: 1,
-        duration: 1.05,
-        stagger: 0.13,
+        duration: 1.4,
+        stagger: 0.16,
         ease: 'power3.out',
       },
-      0.72,
+      1,
     )
     .to(
       headline,
@@ -119,20 +119,20 @@ export function createAboutTimeline({ scene, conditions }) {
         autoAlpha: 0,
         y: mobile ? '-7vh' : '-9vh',
         scale: 0.86,
-        duration: 0.7,
+        duration: 0.9,
         ease: 'power3.inOut',
       },
-      3.55,
+      5.2,
     )
-    .addLabel('who', 4.18)
+    .addLabel('who', 6.1)
     .to(
       whoCopy,
       {
         color: COLORS.headline.accent,
-        duration: 1.9,
+        duration: 3.2,
         ease: 'none',
       },
-      5.05,
+      7.3,
     )
     .to(
       who,
@@ -141,10 +141,10 @@ export function createAboutTimeline({ scene, conditions }) {
         xPercent: 0,
         yPercent: 0,
         scale: 1,
-        duration: 0.86,
+        duration: 1,
         ease: 'power3.out',
       },
-      4.18,
+      6.1,
     )
     .to(
       who,
@@ -153,13 +153,13 @@ export function createAboutTimeline({ scene, conditions }) {
         xPercent: mobile ? -7 : -10,
         yPercent: -7,
         scale: 0.97,
-        duration: 0.55,
+        duration: 0.7,
         ease: 'power2.inOut',
       },
-      7.1,
+      10.8,
     )
-    .addLabel('journey', 7.6)
-    .to(stage, { ...colorVars(COLORS.story), duration: 1.35 }, 7.2)
+    .addLabel('journey', 11.45)
+    .to(stage, { ...colorVars(COLORS.story), duration: 1.8 }, 10.8)
     .to(
       journey,
       {
@@ -167,19 +167,19 @@ export function createAboutTimeline({ scene, conditions }) {
         xPercent: 0,
         yPercent: 0,
         scale: 1,
-        duration: 0.86,
+        duration: 1,
         ease: 'power3.out',
       },
-      7.6,
+      11.45,
     )
     .to(
       journeyCopy,
       {
         color: '#f4c4ae',
-        duration: 2,
+        duration: 3.4,
         ease: 'none',
       },
-      8.5,
+      12.6,
     )
     .to(
       journey,
@@ -188,13 +188,13 @@ export function createAboutTimeline({ scene, conditions }) {
         xPercent: mobile ? 7 : 10,
         yPercent: -7,
         scale: 0.97,
-        duration: 0.55,
+        duration: 0.7,
         ease: 'power2.inOut',
       },
-      10.6,
+      16.2,
     )
-    .addLabel('philosophy', 11.1)
-    .to(stage, { ...colorVars(COLORS.bridge), duration: 1.25 }, 10.85)
+    .addLabel('philosophy', 16.9)
+    .to(stage, { ...colorVars(COLORS.bridge), duration: 1.8 }, 16.2)
     .to(
       philosophy,
       {
@@ -202,36 +202,41 @@ export function createAboutTimeline({ scene, conditions }) {
         xPercent: 0,
         yPercent: 0,
         scale: 1,
-        duration: 0.88,
+        duration: 1.05,
         ease: 'power3.out',
       },
-      11.1,
+      16.9,
     )
     .to(
       philosophyCopy,
       {
         color: '#f5c9b5',
-        duration: 2.3,
+        duration: 4,
         ease: 'none',
       },
-      12,
+      18.1,
     )
-    .addLabel('closing', 14.6)
-    .to(stage, { ...colorVars(COLORS.closing), duration: 1.55 }, 14.6)
-    .to(philosophyCopy, { color: COLORS.closing.foreground, duration: 1.55 }, 14.6)
+    .addLabel('closing', 24)
+    .to(stage, { ...colorVars(COLORS.closing), duration: 2.2 }, 24)
+    .to(philosophyCopy, { color: COLORS.closing.foreground, duration: 2.2 }, 24)
     .to(
       philosophy,
       {
         x: conditions.isLandscape ? 0 : mobile ? '-2vw' : '-5vw',
-        y: mobile ? '-7vh' : '-6vh',
+        y:
+          conditions.isShort || conditions.isLandscape
+            ? 0
+            : mobile
+              ? '-7vh'
+              : '-6vh',
         scale: mobile ? 0.94 : 0.9,
-        duration: 1.55,
+        duration: 2.2,
         ease: 'power2.inOut',
       },
-      14.6,
+      24,
     )
-    .to(handoffRule, { scaleY: 0, duration: 1.15, ease: 'power2.in' }, 14.6)
-    .to(closingRule, { scaleX: 1, duration: 1.2, ease: 'power3.inOut' }, 14.95);
+    .to(handoffRule, { scaleY: 0, duration: 1.6, ease: 'power2.in' }, 24)
+    .to(closingRule, { scaleX: 1, duration: 1.6, ease: 'power3.inOut' }, 24.5);
 
   return () => {
     timeline.scrollTrigger?.kill();
