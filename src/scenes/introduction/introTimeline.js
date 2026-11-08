@@ -8,40 +8,26 @@ function showShot(timeline, shots, shotNumber, position) {
 
 export function createIntroTimeline({ scene, isMobile }) {
   const select = gsap.utils.selector(scene);
-  const closeup = select('.intro-portrait--closeup');
-  const upperBody = select('.intro-portrait--upperbody');
+  const portrait = select('.intro-portrait--primary');
   const opening = select('.intro-opening');
   const scrollCue = select('.intro-scroll-cue');
   const nameLines = select('.intro-name__line > span');
   const name = select('.intro-name');
   const role = select('.intro-role');
-  const cut = select('.intro-cut');
-  const cutLine = select('.intro-cut > span');
   const exitRule = select('.intro-exit-rule');
   const shots = select('[data-shot]');
 
-  gsap.set(closeup, {
+  gsap.set(portrait, {
     autoAlpha: 1,
-    scale: isMobile ? 1.68 : 1.45,
-    x: isMobile ? '0vw' : '5vw',
-    y: isMobile ? '9vh' : '12vh',
-    xPercent: -50,
-    yPercent: -50,
-    transformOrigin: '50% 42%',
-  });
-  gsap.set(upperBody, {
-    autoAlpha: 0,
-    scale: isMobile ? 1.22 : 1.08,
-    x: '0vw',
-    y: isMobile ? '8vh' : '7vh',
+    scale: isMobile ? 2.58 : 3.08,
+    x: isMobile ? '-4vw' : '-5vw',
+    y: isMobile ? '4vh' : '2vh',
     xPercent: -50,
     yPercent: -50,
     transformOrigin: '50% 38%',
   });
   gsap.set(nameLines, { yPercent: 112 });
   gsap.set(role, { autoAlpha: 0, yPercent: 120 });
-  gsap.set(cut, { scaleX: 0, transformOrigin: 'left center' });
-  gsap.set(cutLine, { scaleX: 0, transformOrigin: 'left center' });
   gsap.set(exitRule, { scaleY: 0, transformOrigin: 'top center' });
   gsap.set(shots, { autoAlpha: 0 });
   gsap.set(shots[0], { autoAlpha: 1 });
@@ -60,51 +46,33 @@ export function createIntroTimeline({ scene, isMobile }) {
   timeline
     .addLabel('opening', 0)
     .to(
-      closeup,
+      portrait,
       {
-        scale: isMobile ? 1.28 : 1.08,
-        x: isMobile ? '0vw' : '1vw',
-        y: isMobile ? '5vh' : '6vh',
-        duration: 1.6,
+        scale: isMobile ? 2.12 : 2.38,
+        x: isMobile ? '-2vw' : '-3vw',
+        y: isMobile ? '5vh' : '4vh',
+        duration: 1.5,
       },
       0,
     )
     .to(opening, { autoAlpha: 0, y: '-4vh', duration: 0.55 }, 0.65)
     .to(scrollCue, { autoAlpha: 0, y: '2vh', duration: 0.45 }, 0.72)
-    .addLabel('pullback', 1.1)
+    .addLabel('pullback', 1.05)
     .to(
-      closeup,
+      portrait,
       {
-        scale: isMobile ? 1.02 : 0.82,
-        x: isMobile ? '-1vw' : '-8vw',
-        y: isMobile ? '2vh' : '1vh',
-        duration: 1.25,
+        scale: isMobile ? 1.36 : 1.28,
+        x: isMobile ? '1vw' : '3vw',
+        y: isMobile ? '7vh' : '6vh',
+        duration: 1.75,
       },
-      1.1,
+      1.05,
     );
 
-  showShot(timeline, shots, 2, 1.1);
+  showShot(timeline, shots, 2, 1.05);
 
   timeline
-    .to(cut, { scaleX: 1, duration: 0.34, ease: 'power4.inOut' }, 2.18)
-    .to(cutLine, { scaleX: 1, duration: 0.25, ease: 'power3.in' }, 2.22)
-    .set(closeup, { autoAlpha: 0 }, 2.52)
-    .set(upperBody, { autoAlpha: 1 }, 2.52)
-    .set(cut, { transformOrigin: 'right center' }, 2.52)
-    .set(cutLine, { transformOrigin: 'right center' }, 2.52)
-    .to(cut, { scaleX: 0, duration: 0.38, ease: 'power4.inOut' }, 2.52)
-    .to(cutLine, { scaleX: 0, duration: 0.26, ease: 'power3.out' }, 2.55)
-    .to(
-      upperBody,
-      {
-        scale: isMobile ? 1.03 : 0.9,
-        x: isMobile ? '1vw' : '8vw',
-        y: isMobile ? '7vh' : '6vh',
-        duration: 1.45,
-      },
-      2.58,
-    )
-    .addLabel('identity', 3.38)
+    .addLabel('identity', 2.75)
     .to(
       nameLines,
       {
@@ -113,7 +81,7 @@ export function createIntroTimeline({ scene, isMobile }) {
         stagger: 0.1,
         ease: 'power3.out',
       },
-      3.38,
+      2.75,
     )
     .to(
       role,
@@ -123,26 +91,26 @@ export function createIntroTimeline({ scene, isMobile }) {
         duration: 0.58,
         ease: 'power3.out',
       },
-      3.58,
+      2.95,
     )
     .to(
-      upperBody,
+      portrait,
       {
         scale: isMobile ? 0.94 : 0.82,
         x: isMobile ? '7vw' : '13vw',
         y: isMobile ? '10vh' : '9vh',
-        duration: 1.42,
+        duration: 1.55,
         ease: 'power2.inOut',
       },
-      3.28,
+      2.55,
     );
 
-  showShot(timeline, shots, 3, 3.38);
+  showShot(timeline, shots, 3, 2.75);
 
   timeline
-    .addLabel('exit', 5.45)
+    .addLabel('exit', 5.1)
     .to(
-      upperBody,
+      portrait,
       {
         scale: isMobile ? 0.78 : 0.68,
         x: isMobile ? '-17vw' : '-24vw',
@@ -150,7 +118,7 @@ export function createIntroTimeline({ scene, isMobile }) {
         duration: 1.65,
         ease: 'power2.inOut',
       },
-      5.45,
+      5.1,
     )
     .to(
       name,
@@ -161,7 +129,7 @@ export function createIntroTimeline({ scene, isMobile }) {
         duration: 1.65,
         ease: 'power2.inOut',
       },
-      5.45,
+      5.1,
     )
     .to(
       role,
@@ -171,11 +139,11 @@ export function createIntroTimeline({ scene, isMobile }) {
         duration: 1.65,
         ease: 'power2.inOut',
       },
-      5.45,
+      5.1,
     )
-    .to(exitRule, { scaleY: 1, duration: 1.1, ease: 'power3.inOut' }, 5.72);
+    .to(exitRule, { scaleY: 1, duration: 1.1, ease: 'power3.inOut' }, 5.38);
 
-  showShot(timeline, shots, 4, 5.45);
+  showShot(timeline, shots, 4, 5.1);
 
   return () => {
     timeline.scrollTrigger?.kill();
@@ -183,15 +151,18 @@ export function createIntroTimeline({ scene, isMobile }) {
   };
 }
 
-export function setReducedMotionState(scene) {
+export function setReducedMotionState(scene, isMobile) {
   const select = gsap.utils.selector(scene);
 
-  gsap.set(select('.intro-opening, .intro-scroll-cue, .intro-portrait--closeup'), {
-    display: 'none',
-  });
-  gsap.set(select('.intro-portrait--upperbody'), {
+  gsap.set(select('.intro-opening, .intro-scroll-cue'), { display: 'none' });
+  gsap.set(select('.intro-portrait--primary'), {
     autoAlpha: 1,
-    clearProps: 'transform',
+    scale: isMobile ? 0.94 : 0.82,
+    x: isMobile ? '7vw' : '13vw',
+    y: isMobile ? '10vh' : '9vh',
+    xPercent: -50,
+    yPercent: -50,
+    transformOrigin: '50% 38%',
   });
   gsap.set(select('.intro-name__line > span, .intro-role'), {
     autoAlpha: 1,

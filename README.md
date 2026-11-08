@@ -2,7 +2,7 @@
 
 A React + Vite foundation for a premium, experimental developer portfolio.
 
-The current implementation is a four-shot, scroll-scrubbed introduction sequence. It uses the supplied illustrated portrait assets, a deliberate editorial cut between portrait crops, and a single coordinated GSAP/ScrollTrigger timeline.
+The current implementation is a four-shot, scroll-scrubbed introduction sequence. It uses the supplied upper-body illustration as one continuous virtual camera pullback, coordinated through a single GSAP/ScrollTrigger timeline.
 
 ## Development
 

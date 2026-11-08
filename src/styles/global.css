@@ -9,7 +9,6 @@
   --muted: #9f958d;
   --line: #37302b;
   --warm: #c87552;
-  --warm-dark: #321a14;
 }
 
 * {
@@ -194,13 +193,7 @@ a:focus-visible {
   user-select: none;
 }
 
-.intro-portrait--closeup {
-  top: 53%;
-  left: 56%;
-  width: min(103vw, 148vh);
-}
-
-.intro-portrait--upperbody {
+.intro-portrait--primary {
   top: 55%;
   left: 63%;
   width: min(54vw, 78vh);
@@ -302,23 +295,6 @@ a:focus-visible {
   visibility: hidden;
 }
 
-.intro-cut {
-  position: absolute;
-  z-index: 40;
-  inset: 0;
-  background: var(--warm);
-  will-change: transform;
-}
-
-.intro-cut > span {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  left: 0;
-  height: 1px;
-  background: var(--warm-dark);
-}
-
 .intro-exit-rule {
   position: absolute;
   z-index: 9;
@@ -368,13 +344,7 @@ a:focus-visible {
     font-size: clamp(1.25rem, 6vw, 1.7rem);
   }
 
-  .intro-portrait--closeup {
-    top: 50%;
-    left: 50%;
-    width: min(158vw, 112vh);
-  }
-
-  .intro-portrait--upperbody {
+  .intro-portrait--primary {
     top: 57%;
     left: 55%;
     width: min(112vw, 68vh);
@@ -424,13 +394,11 @@ a:focus-visible {
 
   .intro-opening,
   .intro-scroll-cue,
-  .intro-portrait--closeup,
-  .intro-cut,
   .intro-exit-rule {
     display: none;
   }
 
-  .intro-portrait--upperbody {
+  .intro-portrait--primary {
     visibility: visible;
     opacity: 1;
   }

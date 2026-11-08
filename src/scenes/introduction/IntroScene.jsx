@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
 
-import closeupPortrait from '../../assets/portraits/portrait-closeup.png';
 import upperBodyPortrait from '../../assets/portraits/portrait-upperbody.png';
 import { gsap, ScrollTrigger } from '../../animation/gsap.js';
 import { createIntroTimeline, setReducedMotionState } from './introTimeline.js';
@@ -31,7 +30,7 @@ function IntroScene() {
         },
         ({ conditions }) => {
           if (conditions.reduceMotion) {
-            setReducedMotionState(scene);
+            setReducedMotionState(scene, conditions.isMobile);
             return undefined;
           }
 
@@ -80,22 +79,12 @@ function IntroScene() {
           </p>
         </div>
 
-        <div className="intro-portrait intro-portrait--closeup" aria-hidden="true">
-          <img
-            src={closeupPortrait}
-            alt=""
-            draggable="false"
-            fetchPriority="high"
-            onLoad={refreshScrollTrigger}
-          />
-        </div>
-
-        <div className="intro-portrait intro-portrait--upperbody" aria-hidden="true">
+        <div className="intro-portrait intro-portrait--primary" aria-hidden="true">
           <img
             src={upperBodyPortrait}
             alt=""
             draggable="false"
-            decoding="async"
+            fetchPriority="high"
             onLoad={refreshScrollTrigger}
           />
         </div>
@@ -123,10 +112,6 @@ function IntroScene() {
           <span data-shot="2">02</span>
           <span data-shot="3">03</span>
           <span data-shot="4">04</span>
-        </div>
-
-        <div className="intro-cut" aria-hidden="true">
-          <span />
         </div>
 
         <div className="intro-exit-rule" aria-hidden="true" />
