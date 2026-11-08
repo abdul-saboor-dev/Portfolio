@@ -51,6 +51,9 @@ export function createAboutTimeline({ scene, conditions }) {
   const who = select('.about-story--who');
   const journey = select('.about-story--journey');
   const philosophy = select('.about-story--philosophy');
+  const whoCopy = select('.about-story--who .about-story__copy');
+  const journeyCopy = select('.about-story--journey .about-story__copy');
+  const philosophyCopy = select('.about-story--philosophy .about-story__copy');
   const handoffRule = select('.about-rule--handoff');
   const closingRule = select('.about-rule--closing');
   const mobile = conditions.isMobile;
@@ -67,6 +70,9 @@ export function createAboutTimeline({ scene, conditions }) {
   gsap.set(who, { xPercent: mobile ? 8 : 12, yPercent: 8, scale: 1.025 });
   gsap.set(journey, { xPercent: mobile ? -8 : -10, yPercent: 8, scale: 1.025 });
   gsap.set(philosophy, { xPercent: mobile ? 7 : 10, yPercent: 8, scale: 1.025 });
+  gsap.set(whoCopy, { color: COLORS.headline.foreground });
+  gsap.set(journeyCopy, { color: COLORS.story.foreground });
+  gsap.set(philosophyCopy, { color: COLORS.bridge.foreground });
   gsap.set(handoffRule, { scaleY: 1, transformOrigin: 'top center' });
   gsap.set(closingRule, { scaleX: 0, transformOrigin: 'left center' });
 
@@ -120,6 +126,15 @@ export function createAboutTimeline({ scene, conditions }) {
     )
     .addLabel('who', 4.18)
     .to(
+      whoCopy,
+      {
+        color: COLORS.headline.accent,
+        duration: 1.9,
+        ease: 'none',
+      },
+      5.05,
+    )
+    .to(
       who,
       {
         autoAlpha: 1,
@@ -141,10 +156,10 @@ export function createAboutTimeline({ scene, conditions }) {
         duration: 0.55,
         ease: 'power2.inOut',
       },
-      6.2,
+      7.1,
     )
-    .addLabel('journey', 6.7)
-    .to(stage, { ...colorVars(COLORS.story), duration: 1.35 }, 6.3)
+    .addLabel('journey', 7.6)
+    .to(stage, { ...colorVars(COLORS.story), duration: 1.35 }, 7.2)
     .to(
       journey,
       {
@@ -155,7 +170,16 @@ export function createAboutTimeline({ scene, conditions }) {
         duration: 0.86,
         ease: 'power3.out',
       },
-      6.7,
+      7.6,
+    )
+    .to(
+      journeyCopy,
+      {
+        color: '#f4c4ae',
+        duration: 2,
+        ease: 'none',
+      },
+      8.5,
     )
     .to(
       journey,
@@ -167,10 +191,10 @@ export function createAboutTimeline({ scene, conditions }) {
         duration: 0.55,
         ease: 'power2.inOut',
       },
-      8.9,
+      10.6,
     )
-    .addLabel('philosophy', 9.4)
-    .to(stage, { ...colorVars(COLORS.bridge), duration: 1.25 }, 9.15)
+    .addLabel('philosophy', 11.1)
+    .to(stage, { ...colorVars(COLORS.bridge), duration: 1.25 }, 10.85)
     .to(
       philosophy,
       {
@@ -181,10 +205,20 @@ export function createAboutTimeline({ scene, conditions }) {
         duration: 0.88,
         ease: 'power3.out',
       },
-      9.4,
+      11.1,
     )
-    .addLabel('closing', 12)
-    .to(stage, { ...colorVars(COLORS.closing), duration: 1.55 }, 12)
+    .to(
+      philosophyCopy,
+      {
+        color: '#f5c9b5',
+        duration: 2.3,
+        ease: 'none',
+      },
+      12,
+    )
+    .addLabel('closing', 14.6)
+    .to(stage, { ...colorVars(COLORS.closing), duration: 1.55 }, 14.6)
+    .to(philosophyCopy, { color: COLORS.closing.foreground, duration: 1.55 }, 14.6)
     .to(
       philosophy,
       {
@@ -194,10 +228,10 @@ export function createAboutTimeline({ scene, conditions }) {
         duration: 1.55,
         ease: 'power2.inOut',
       },
-      12,
+      14.6,
     )
-    .to(handoffRule, { scaleY: 0, duration: 1.15, ease: 'power2.in' }, 12)
-    .to(closingRule, { scaleX: 1, duration: 1.2, ease: 'power3.inOut' }, 12.35);
+    .to(handoffRule, { scaleY: 0, duration: 1.15, ease: 'power2.in' }, 14.6)
+    .to(closingRule, { scaleX: 1, duration: 1.2, ease: 'power3.inOut' }, 14.95);
 
   return () => {
     timeline.scrollTrigger?.kill();

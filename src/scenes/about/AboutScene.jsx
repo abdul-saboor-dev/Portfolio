@@ -78,27 +78,36 @@ function AboutScene() {
         </header>
 
         <div className="about-stories">
-          <p className="about-story about-story--who">
-            I'm Abdul Saboor, a developer and aspiring designer passionate about
-            building modern, functional, and visually engaging digital experiences. I
-            enjoy turning ideas into practical solutions, blending development with
-            creative thinking and thoughtful design to create products that are not
-            only useful but also intuitive and aesthetically refined.
-          </p>
+          <article className="about-story about-story--who">
+            <h3 className="about-story__heading">Who I Am</h3>
+            <p className="about-story__copy">
+              I'm Abdul Saboor, a developer and aspiring designer passionate about
+              building modern, functional, and visually engaging digital experiences.
+              I enjoy turning ideas into practical solutions, blending development
+              with creative thinking and thoughtful design to create products that are
+              not only useful but also intuitive and aesthetically refined.
+            </p>
+          </article>
 
-          <p className="about-story about-story--journey">
-            My journey started with exploring the fundamentals of web development and
-            gradually expanded into full-stack development and UI design. I'm
-            continuously learning, experimenting with new technologies, exploring
-            design principles, and refining the way I approach problems.
-          </p>
+          <article className="about-story about-story--journey">
+            <h3 className="about-story__heading">My Journey</h3>
+            <p className="about-story__copy">
+              My journey started with exploring the fundamentals of web development
+              and gradually expanded into full-stack development and UI design. I'm
+              continuously learning, experimenting with new technologies, exploring
+              design principles, and refining the way I approach problems.
+            </p>
+          </article>
 
-          <p className="about-story about-story--philosophy">
-            I believe great digital experiences go beyond writing code, they're about
-            understanding problems, crafting meaningful solutions, and bringing
-            functionality and design together to build something that makes a
-            difference.
-          </p>
+          <article className="about-story about-story--philosophy">
+            <h3 className="about-story__heading">My Philosophy</h3>
+            <p className="about-story__copy">
+              I believe great digital experiences go beyond writing code, they're about
+              understanding problems, crafting meaningful solutions, and bringing
+              functionality and design together to build something that makes a
+              difference.
+            </p>
+          </article>
         </div>
       </div>
 
