@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kinetic Identity — Typeface Comparison</title>
+    <style>
+      @font-face {
+        font-family: 'Big Shoulders Display';
+        src: url('/fonts/big-shoulders-display-latin.woff2') format('woff2');
+        font-weight: 100 900;
+      }
+
+      @font-face {
+        font-family: 'League Gothic Condensed';
+        src: url('/fonts/league-gothic-condensed.woff2') format('woff2');
+        font-weight: 400;
+      }
+
+      @font-face {
+        font-family: 'League Gothic';
+        src: url('/fonts/league-gothic-regular.woff2') format('woff2');
+        font-weight: 400;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        color: #101010;
+        background: #f5f5f2;
+        font-family: system-ui, sans-serif;
+      }
+
+      main {
+        display: grid;
+        min-height: 100vh;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      section {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-width: 0;
+        padding: 24px;
+        border-right: 1px solid rgba(16, 16, 16, 0.2);
+      }
+
+      section:last-child {
+        border-right: 0;
+      }
+
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h2 {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      p {
+        max-width: 42ch;
+        color: #666;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .sample {
+        display: grid;
+        align-content: center;
+        justify-content: start;
+        min-width: 0;
+        font-size: clamp(150px, 18vw, 290px);
+        line-height: 0.72;
+        text-transform: uppercase;
+      }
+
+      .sample span {
+        display: block;
+        width: max-content;
+        white-space: nowrap;
+      }
+
+      .sample--native {
+        font-family: 'Big Shoulders Display', sans-serif;
+        font-weight: 900;
+        letter-spacing: -0.043em;
+      }
+
+      .sample--league,
+      .sample--league-condensed {
+        font-family: 'League Gothic', sans-serif;
+        font-weight: 400;
+        letter-spacing: -0.006em;
+        line-height: 0.75;
+      }
+
+      .sample--league-condensed {
+        font-family: 'League Gothic Condensed', sans-serif;
+      }
+
+      @media (max-width: 900px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+
+        section {
+          min-height: 100svh;
+          border-right: 0;
+          border-bottom: 1px solid rgba(16, 16, 16, 0.2);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section>
+        <h2>A — Big Shoulders Display 900 / native</h2>
+        <div class="sample sample--native" aria-label="ABDUL SABOOR">
+          <span>ABDUL</span><span>SABOOR</span>
+        </div>
+        <p>
+          Current production baseline. Strong mass and distinctive A/S/R, but too broad
+          and conventional for the new architectural reference.
+        </p>
+      </section>
+      <section>
+        <h2>B — League Gothic / native</h2>
+        <div class="sample sample--league" aria-label="ABDUL SABOOR">
+          <span>ABDUL</span><span>SABOOR</span>
+        </div>
+        <p>
+          Naturally condensed and tall under OFL 1.1. Stronger small-size recognition than
+          the narrower cut while retaining architectural verticality.
+        </p>
+      </section>
+      <section>
+        <h2>C — League Gothic Condensed / native</h2>
+        <div class="sample sample--league-condensed" aria-label="ABDUL SABOOR">
+          <span>ABDUL</span><span>SABOOR</span>
+        </div>
+        <p>
+          The closest raw width-to-height ratio, but counters and duplicate round forms
+          become too fragile in the small circular loader. Rejected for the shared glyph
+          system.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

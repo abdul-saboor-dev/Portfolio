@@ -1,20 +1,55 @@
 {
-  "name": "portfolio",
+  "name": "abdul-saboor-portfolio",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "studio",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "identity:assets": "node scripts/generate-identity-assets.mjs",
+    "browser:install": "node scripts/install-playwright.mjs",
+    "studio:dev": "npm run dev --workspace @portfolio/studio",
+    "studio:build": "npm run build --workspace @portfolio/studio",
+    "studio:build:check": "node scripts/run-studio-build-check.mjs",
+    "studio:schema": "npm run schema:extract --workspace @portfolio/studio",
+    "test:content": "node --test tests/content/*.test.js",
+    "test:identity": "node --test tests/identity/*.test.js",
+    "test:e2e": "playwright test",
+    "visual:hero": "node scripts/capture-hero.mjs",
+    "visual:kinetic": "node scripts/capture-kinetic.mjs",
+    "visual:identity": "node scripts/capture-scroll-identity.mjs",
+    "visual:about": "node scripts/capture-about.mjs",
+    "visual:education": "node scripts/capture-education.mjs",
+    "visual:type": "node scripts/capture-type-comparison.mjs",
+    "verify": "npm run lint && npm run format:check && npm run test:content && npm run test:identity && npm run studio:build:check && npm run build && npm run test:e2e"
   },
   "dependencies": {
-    "gsap": "^3.13.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "@portfolio/content-model": "*",
+    "@sanity/client": "^8.16.0",
+    "@sanity/image-url": "^2.2.0",
+    "gsap": "^3.15.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.0.2",
-    "vite": "^7.1.7"
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
+    "@vitejs/plugin-react": "^6.3.0",
+    "eslint": "^10.15.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "vite": "^8.3.8"
   }
 }

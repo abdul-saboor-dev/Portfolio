@@ -1,16 +1,23 @@
-import IntroScene from './scenes/introduction/IntroScene.jsx';
-import AboutScene from './scenes/about/AboutScene.jsx';
+import KineticHero from './components/KineticHero.jsx';
+import { usePortfolioContent } from './cms/index.js';
 
 function App() {
-  return (
-    <main className="site-shell">
-      <a className="skip-link" href="#about">
-        Skip introduction
-      </a>
+  const { content, status } = usePortfolioContent();
 
-      <IntroScene />
-      <AboutScene />
-    </main>
+  return (
+    <>
+      <a className="skip-link" href="#main-content">
+        Skip to portfolio
+      </a>
+      <main id="main-content" aria-label="Abdul Saboor portfolio" tabIndex="-1">
+        <KineticHero
+          about={content.about}
+          education={content.education}
+          profile={content.profile}
+          contentStatus={status}
+        />
+      </main>
+    </>
   );
 }
 

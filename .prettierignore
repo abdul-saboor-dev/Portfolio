@@ -1,0 +1,11 @@
+dist
+node_modules
+playwright-report
+test-results
+package-lock.json
+.agents/skills
+studio/dist
+studio/schema.json
+src/cms/sanity.types.ts
+
+public/favicon.svg

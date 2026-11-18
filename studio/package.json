@@ -1,0 +1,21 @@
+{
+  "name": "@portfolio/studio",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/sanity.mjs dev",
+    "build": "node scripts/sanity.mjs build",
+    "deploy": "node scripts/sanity.mjs deploy",
+    "schema:extract": "node scripts/sanity.mjs schema extract --enforce-required-fields",
+    "typegen": "node scripts/sanity.mjs typegen generate"
+  },
+  "dependencies": {
+    "@portfolio/content-model": "*",
+    "@sanity/vision": "^6.23.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sanity": "^6.23.0",
+    "styled-components": "^6.6.0"
+  }
+}
