@@ -8,4 +8,4 @@ studio/dist
 studio/schema.json
 src/cms/sanity.types.ts
 
-public/favicon.svg
+public/site.webmanifest

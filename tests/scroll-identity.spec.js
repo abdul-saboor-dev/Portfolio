@@ -252,29 +252,73 @@ test('offers a readable normal-flow About section with reduced motion', async ({
   );
 });
 
-test('serves the supplied AS artwork as the active PNG favicon', async ({
+test('serves the supplied AS favicon pack with production sizes', async ({
   page,
   request,
 }) => {
   await page.goto('/');
-  const favicon = page.locator('link[rel="icon"]');
-  await expect(favicon).toHaveAttribute('href', '/favicon.png');
-  await expect(favicon).toHaveAttribute('type', 'image/png');
-  const response = await request.get('/favicon.png');
-  expect(response.ok()).toBe(true);
-  expect(response.headers()['content-type']).toContain('image/png');
-  const bytes = await response.body();
-  expect([...bytes.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+  const faviconLinks = [
+    {
+      href: '/favicon.ico',
+      rel: 'icon',
+      sizes: 'any',
+      type: 'image/x-icon',
+    },
+    {
+      href: '/favicon-32x32.png',
+      rel: 'icon',
+      sizes: '32x32',
+      type: 'image/png',
+    },
+    {
+      href: '/favicon-16x16.png',
+      rel: 'icon',
+      sizes: '16x16',
+      type: 'image/png',
+    },
+    {
+      href: '/apple-touch-icon.png',
+      rel: 'apple-touch-icon',
+      sizes: '180x180',
+    },
+  ];
 
-  const dimensions = await page.evaluate(
-    () =>
-      new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () =>
-          resolve({ height: image.naturalHeight, width: image.naturalWidth });
-        image.onerror = reject;
-        image.src = '/favicon.png';
-      }),
+  for (const { href, rel, sizes, type } of faviconLinks) {
+    const link = page.locator(`link[rel="${rel}"][href="${href}"]`);
+    await expect(link).toHaveAttribute('sizes', sizes);
+    if (type) await expect(link).toHaveAttribute('type', type);
+  }
+
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+    'href',
+    '/site.webmanifest',
   );
-  expect(dimensions).toEqual({ height: 512, width: 512 });
+  await expect(page.locator('link[href="/favicon.png"]')).toHaveCount(0);
+
+  const rasterAssets = [
+    ['/favicon-16x16.png', 16],
+    ['/favicon-32x32.png', 32],
+    ['/apple-touch-icon.png', 180],
+    ['/android-chrome-192x192.png', 192],
+    ['/android-chrome-512x512.png', 512],
+  ];
+
+  for (const [src, size] of rasterAssets) {
+    const response = await request.get(src);
+    expect(response.ok()).toBe(true);
+    expect(response.headers()['content-type']).toContain('image/png');
+
+    const dimensions = await page.evaluate(
+      (imageSource) =>
+        new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () =>
+            resolve({ height: image.naturalHeight, width: image.naturalWidth });
+          image.onerror = reject;
+          image.src = imageSource;
+        }),
+      src,
+    );
+    expect(dimensions).toEqual({ height: size, width: size });
+  }
 });
