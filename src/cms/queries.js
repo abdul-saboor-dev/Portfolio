@@ -29,6 +29,19 @@ export const PORTFOLIO_CONTENT_QUERY = `{
     description,
     order
   },
+  "skills": *[_type == "skill" && visible == true] | order(order asc, name asc, _id asc){
+    _id,
+    name,
+    "slug": slug.current,
+    aliases,
+    "category": category->title,
+    "logoUrl": logo.asset->url,
+    "alternateLogoUrl": alternateLogo.asset->url,
+    "logoAlt": logo.alt,
+    status,
+    visible,
+    order
+  },
   "skillCategories": *[_type == "skillCategory"] | order(order asc, _createdAt asc){
     _id,
     title,

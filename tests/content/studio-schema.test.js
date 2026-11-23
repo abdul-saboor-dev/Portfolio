@@ -15,6 +15,7 @@ import {
   HERO_STATEMENT_COUNT,
   HERO_STATEMENT_MAX_LENGTH,
   PROJECTS_ACTION_LABEL_MAX_LENGTH,
+  SKILL_STATUSES,
 } from '@portfolio/content-model';
 
 test('the Studio exposes every required content document type', () => {
@@ -33,6 +34,32 @@ test('the Studio exposes every required content document type', () => {
     'skill',
     'skillCategory',
   ]);
+});
+
+test('the Studio Skills Library exposes searchable media, status, visibility, and order', () => {
+  const skill = schemaTypes.find(({ name }) => name === 'skill');
+  const field = (name) => skill.fields.find((entry) => entry.name === name);
+
+  for (const name of [
+    'name',
+    'slug',
+    'aliases',
+    'category',
+    'logo',
+    'alternateLogo',
+    'status',
+    'visible',
+    'order',
+  ]) {
+    assert.ok(field(name), `missing Skills field: ${name}`);
+  }
+  assert.equal(field('logo').type, 'image');
+  assert.equal(field('alternateLogo').type, 'image');
+  assert.deepEqual(
+    field('status').options.list.map(({ value }) => value),
+    SKILL_STATUSES,
+  );
+  assert.equal(field('visible').initialValue, false);
 });
 
 test('the Studio exposes ordered and bounded Education records', () => {

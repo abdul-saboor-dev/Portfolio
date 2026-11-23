@@ -162,6 +162,10 @@ test('maps native wheel, touch, and keyboard scrolling to the identity transitio
       'data-education-state',
       'complete',
     );
+    await expect(page.locator('.skills-stage')).toHaveAttribute(
+      'data-skills-state',
+      'complete',
+    );
     await page.waitForTimeout(350);
     await page.mouse.wheel(0, -10000);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);

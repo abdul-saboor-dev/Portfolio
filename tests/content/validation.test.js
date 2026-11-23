@@ -5,6 +5,7 @@ import {
   APPROVED_EDUCATION_RECORDS,
   APPROVED_HERO_STATEMENTS,
   APPROVED_IDENTITY_TAGLINES,
+  APPROVED_SKILLS,
 } from '@portfolio/content-model';
 import { FALLBACK_CONTENT, validatePortfolioContent } from '../../src/cms/validation.js';
 
@@ -51,6 +52,35 @@ test('missing CMS content returns only approved fallback identity content', () =
   assert.deepEqual(result.content.projects, []);
   assert.equal(result.content.about.narrative, APPROVED_ABOUT_NARRATIVE);
   assert.deepEqual(result.content.education, APPROVED_EDUCATION_RECORDS);
+  assert.deepEqual(result.content.skills, APPROVED_SKILLS);
+});
+
+test('Skills records are visible-only and sorted by editor order', () => {
+  const createSkill = (id, order, visible = true) => ({
+    _id: id,
+    aliases: [],
+    alternateLogoUrl: null,
+    category: 'Frontend',
+    logoAlt: `${id} logo`,
+    logoUrl: `/skills/svg/${id}.svg`,
+    name: id,
+    order,
+    slug: id,
+    status: 'Working With',
+    visible,
+  });
+  const result = validatePortfolioContent({
+    skills: [
+      createSkill('third', 3),
+      createSkill('hidden', 0, false),
+      createSkill('first', 1),
+    ],
+  });
+  assert.deepEqual(
+    result.content.skills.map(({ _id }) => _id),
+    ['first', 'third'],
+  );
+  assert.equal(result.issues.length, 0);
 });
 
 test('published CV metadata is validated without requiring a privileged token', () => {

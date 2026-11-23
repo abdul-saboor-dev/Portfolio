@@ -35,7 +35,57 @@ export const structure = (S) =>
       orderedList(S, 'Projects', 'project'),
       S.divider(),
       orderedList(S, 'Skill categories', 'skillCategory'),
-      orderedList(S, 'Skills', 'skill'),
+      S.listItem()
+        .title('Skills Library')
+        .schemaType('skill')
+        .child(
+          S.list()
+            .title('Skills Library')
+            .items([
+              orderedList(S, 'All skills', 'skill').getChild(),
+              S.listItem()
+                .title('Visible skills')
+                .child(
+                  S.documentList()
+                    .title('Visible skills')
+                    .filter('_type == "skill" && visible == true')
+                    .defaultOrdering([{ field: 'order', direction: 'asc' }]),
+                ),
+              S.listItem()
+                .title('Hidden skills')
+                .child(
+                  S.documentList()
+                    .title('Hidden skills')
+                    .filter('_type == "skill" && visible != true')
+                    .defaultOrdering([{ field: 'name', direction: 'asc' }]),
+                ),
+              ...['Working With', 'Learning'].map((status) =>
+                S.listItem()
+                  .title(status)
+                  .child(
+                    S.documentList()
+                      .title(status)
+                      .filter('_type == "skill" && status == $status')
+                      .params({ status })
+                      .defaultOrdering([{ field: 'order', direction: 'asc' }]),
+                  ),
+              ),
+              S.divider(),
+              S.listItem()
+                .title('Browse by category')
+                .child(
+                  S.documentTypeList('skillCategory')
+                    .title('Skill categories')
+                    .child((categoryId) =>
+                      S.documentList()
+                        .title('Skills in category')
+                        .filter('_type == "skill" && references($categoryId)')
+                        .params({ categoryId })
+                        .defaultOrdering([{ field: 'order', direction: 'asc' }]),
+                    ),
+                ),
+            ]),
+        ),
       S.divider(),
       singletonItem(S, 'Contact and social links', 'contact', 'contact'),
       singletonItem(S, 'Site settings and SEO', 'siteSettings', 'siteSettings'),

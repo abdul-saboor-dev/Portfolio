@@ -8,8 +8,9 @@ import HeroActions from './HeroActions.jsx';
 import HeroNavigation from './HeroNavigation.jsx';
 import HeroScrollCue from './HeroScrollCue.jsx';
 import KineticWordmark from './KineticWordmark.jsx';
+import SkillsSection from './SkillsSection.jsx';
 
-function KineticHero({ about, education, profile, contentStatus }) {
+function KineticHero({ about, education, skills, profile, contentStatus }) {
   const heroRef = useRef(null);
   useKineticEntrance(heroRef);
   useScrollIdentity(heroRef);
@@ -58,6 +59,7 @@ function KineticHero({ about, education, profile, contentStatus }) {
 
       <AboutSection narrative={about.narrative} />
       <EducationSection records={education} />
+      <SkillsSection skills={skills} />
     </header>
   );
 }

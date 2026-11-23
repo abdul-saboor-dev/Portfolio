@@ -15,6 +15,42 @@ export const EDUCATION_DESCRIPTION_MAX_LENGTH = 220;
 export const EDUCATION_YEAR_MIN = 1900;
 export const EDUCATION_YEAR_MAX = 2100;
 export const EDUCATION_STATUSES = Object.freeze(['In Progress', 'Completed']);
+export const SKILL_STATUSES = Object.freeze(['Working With', 'Learning']);
+
+const skill = (slug, name, category, aliases, order) =>
+  Object.freeze({
+    _id: `skill-${slug}`,
+    aliases: Object.freeze(aliases.split(' ').filter(Boolean)),
+    alternateLogoUrl: `/skills/png/${slug}.png`,
+    category,
+    logoAlt: `${name} logo`,
+    logoUrl: `/skills/svg/${slug}.svg`,
+    name,
+    order,
+    slug,
+    status: 'Working With',
+    visible: true,
+  });
+
+export const APPROVED_SKILLS = Object.freeze([
+  skill('html5', 'HTML5', 'Frontend', 'html html5 markup', 0),
+  skill('css3', 'CSS3', 'Frontend', 'css styles', 1),
+  skill('javascript', 'JavaScript', 'Frontend', 'js ecmascript', 2),
+  skill('typescript', 'TypeScript', 'Frontend', 'ts', 3),
+  skill('react', 'React', 'Frontend', 'reactjs', 4),
+  skill('vite', 'Vite', 'Frontend', 'vitejs', 5),
+  skill('tailwind', 'Tailwind CSS', 'Frontend', 'tailwindcss', 6),
+  skill('bootstrap', 'Bootstrap', 'Frontend', '', 7),
+  skill('nodejs', 'Node.js', 'Backend', 'node', 8),
+  skill('express', 'Express.js', 'Backend', 'expressjs', 9),
+  skill('mongodb', 'MongoDB', 'Database', 'mongo', 10),
+  skill('git', 'Git', 'Tools', 'version control', 11),
+  skill('github', 'GitHub', 'Tools', 'git hosting', 12),
+  skill('figma', 'Figma', 'Design', 'ui ux', 13),
+  skill('canva', 'Canva', 'Design', 'graphics', 14),
+  skill('vscode', 'VS Code', 'Tools', 'visual studio code editor', 15),
+  skill('cpp', 'C++', 'Languages', 'cplusplus cpp', 16),
+]);
 
 export const APPROVED_HERO_STATEMENTS = Object.freeze([
   'I build for the web.',

@@ -380,12 +380,16 @@ test('renders the six-section navigation without activating unfinished destinati
     'href',
     '#education',
   );
-  for (const label of ['Skills', 'Projects', 'Contact']) {
+  await expect(navigation.getByRole('link', { name: /Skills/ })).toHaveAttribute(
+    'href',
+    '#skills',
+  );
+  for (const label of ['Projects', 'Contact']) {
     await expect(
       navigation.locator('.hero-navigation__item').filter({ hasText: label }),
     ).toHaveAttribute('aria-disabled', 'true');
   }
-  await expect(navigation.locator('a')).toHaveCount(3);
+  await expect(navigation.locator('a')).toHaveCount(4);
   const actions = page.getByLabel('Hero actions');
   await expect(actions).toBeVisible();
   await expect(actions.locator('.kinetic-hero__action')).toHaveCount(2);
@@ -413,7 +417,7 @@ test('renders the six-section navigation without activating unfinished destinati
     'href',
     '#projects',
   );
-  await expect(navigation.locator('a')).toHaveCount(4);
+  await expect(navigation.locator('a')).toHaveCount(5);
   await expect(scrollCue).toBeVisible();
   await expect(scrollCue).toHaveAttribute('href', '#about');
   await expect(scrollCue).not.toHaveAttribute('tabindex', '-1');
@@ -669,7 +673,7 @@ test('opens an accessible mobile editorial menu without replaying the entrance',
     'href',
     '#home',
   );
-  await expect(dialog.locator('a')).toHaveCount(3);
+  await expect(dialog.locator('a')).toHaveCount(4);
   await expect(dialog.getByRole('link', { name: /About/ })).toHaveAttribute(
     'href',
     '#about',
@@ -678,7 +682,11 @@ test('opens an accessible mobile editorial menu without replaying the entrance',
     'href',
     '#education',
   );
-  for (const label of ['Skills', 'Projects', 'Contact']) {
+  await expect(dialog.getByRole('link', { name: /Skills/ })).toHaveAttribute(
+    'href',
+    '#skills',
+  );
+  for (const label of ['Projects', 'Contact']) {
     await expect(
       dialog.locator('.hero-navigation__item').filter({ hasText: label }),
     ).toHaveAttribute('aria-disabled', 'true');

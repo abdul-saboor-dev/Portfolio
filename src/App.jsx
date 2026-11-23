@@ -13,6 +13,7 @@ function App() {
         <KineticHero
           about={content.about}
           education={content.education}
+          skills={content.skills}
           profile={content.profile}
           contentStatus={status}
         />

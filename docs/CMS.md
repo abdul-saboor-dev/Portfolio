@@ -49,12 +49,23 @@ Recommended verification after credentials are configured:
 1. Sign in as the owner and confirm the Studio loads.
 2. Create the singleton Profile, About, Contact, and Site Settings documents through the dedicated navigation items. Profile owns exactly three Hero statements (32 characters each), the Hero introduction (130), Projects label/destination, CV label, and PDF; About owns the single narrative (650). Education is a repeatable ordered collection: add, edit, remove, and reorder entries without changing frontend code. Lower display-order values appear first, with start year and document ID providing stable tie-breaks.
 3. Enter the six approved taglines and verify that a seventh, duplicate, multiline, or overlong tagline is rejected.
-4. Optionally upload the owner's real CV as a PDF in Profile and confirm the published frontend enables the in-page viewer. Without a published file, the View CV action is withheld.
-5. Create a project draft with cover image, alternative text, technologies, and optional links.
-6. Confirm an editor without publish permission can save a draft but cannot publish.
-7. Publish the project and confirm the public client returns it.
-8. Change the draft without publishing and confirm the public client still returns the published version.
-9. Unpublish the test content or replace it with real owner-provided content.
+4. Use Skills Library to search by name or alias, browse by category, upload or replace a logo, set Working With/Learning status, control public visibility, and assign a numeric display order. Hidden records remain editable without being returned by the public query.
+5. Optionally upload the owner's real CV as a PDF in Profile and confirm the published frontend enables the in-page viewer. Without a published file, the View CV action is withheld.
+6. Create a project draft with cover image, alternative text, technologies, and optional links.
+7. Confirm an editor without publish permission can save a draft but cannot publish.
+8. Publish the project and confirm the public client returns it.
+9. Change the draft without publishing and confirm the public client still returns the published version.
+10. Unpublish the test content or replace it with real owner-provided content.
+
+## Skills Library import
+
+The supplied external icon catalog can seed the library without committing the full source collection:
+
+```bash
+npm run skills:import -- --catalog "D:/path/to/portfolio-skill-icons/ICON_CATALOG.json"
+```
+
+That command validates the catalog and assets only. To create missing Sanity records and upload PNG assets, provide `SANITY_STUDIO_PROJECT_ID`, optional `SANITY_STUDIO_DATASET`, and secret `SANITY_AUTH_TOKEN`, then add `--commit`. Existing skill document IDs are skipped so editor changes are not overwritten. The approved selection is initially visible; other imported library records are hidden until the owner enables them. Less and Prettier were absent from the supplied valid catalog and are not regenerated. Live import and retrieval remain unverified until real project credentials are configured.
 
 Do not use fabricated achievements, projects, qualifications, or metrics for testing in the production dataset. Use a disposable test dataset when realistic fixtures are required.
 
@@ -103,7 +114,7 @@ As of November 16, 2026, this repository uses registry-current Sanity Studio `6.
 - a published-only CDN client;
 - one consolidated GROQ request for portfolio content;
 - section-by-section Zod validation so one malformed document does not erase unrelated content;
-- approved fallback identity, About, and Education content, plus empty fallbacks for unprovided later sections;
+- approved fallback identity, About, Education, and Skills content, plus empty fallbacks for unprovided later sections;
 - cached retrieval so scroll animation code never performs CMS requests;
 - safe image URL and loading helpers; and
 - a reusable `usePortfolioContent` hook for later phases.

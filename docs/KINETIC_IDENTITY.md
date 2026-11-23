@@ -1,6 +1,6 @@
 # Kinetic identity architecture
 
-Phase 03 preserves the production Hero and release choreography while extending the existing A/S extraction and About reading sequence into a scroll-controlled Education experience.
+Phase 04 preserves the production Hero and release choreography while extending the existing A/S extraction, About reading sequence, and Education carousel into a scroll-controlled Skills formation.
 
 ## Typeface
 
@@ -77,13 +77,17 @@ Mid-animation resize preserves the last visual glyph centers against the new res
 
 No duplicate wordmark layer should replace the moving glyphs.
 
-## Scroll identity, About, and Education controller
+## Scroll identity, About, Education, and Skills controller
 
 `src/animation/scrollIdentity.js` owns one scoped ScrollTrigger and remains the authority for the pinned visual stage. It moves `glyph-a-01` and `glyph-s-01` into responsive monogram destinations, coordinates the other nine glyphs and Hero support out, uncovers About in parallel, and then changes only word color in reading order. After the completed-reading hold, it delegates the added range to `src/animation/educationSequence.js`. That sequence clears About through a horizontal mask, establishes the first Education record, and translates the measured record track horizontally without changing the A/S glyph transforms.
 
-Education distance derives from the current record count and visible viewport height. Track travel derives from the first and last rendered record offsets. Resize, CMS-driven child changes, and reorder operations rebuild those measurements while preserving the current identity and Education phase progress. One, two, three, and four-or-more record configurations therefore require no animation-code edits. A short final hold keeps the last record readable and leaves a clean future Skills boundary.
+Education distance derives from the current record count and visible viewport height. Track travel derives from the first and last rendered record offsets. Resize, CMS-driven child changes, and reorder operations rebuild those measurements while preserving the current identity and Education phase progress. One, two, three, and four-or-more record configurations therefore require no animation-code edits. A short final hold keeps the last record readable before the Skills handoff begins.
 
-The controller takes ownership only after `data-motion-ready="true"`. Reduced motion creates no pin or animation range: the static Hero, fully dark About, and every Education record remain directly readable in normal vertical document flow.
+After that hold, `src/animation/skillsSequence.js` adds a third paused sub-sequence to the same master ScrollTrigger. Education contracts horizontally while ordered technology marks enter vertically into CSS-defined destinations. The code symbol is not a CMS skill and rises last. The final formation holds before the future Projects boundary.
+
+`src/skills/pyramidLayout.js` calculates strictly narrowing rows from the current visible record count; it does not encode an 18-item special case. Stable Sanity order determines flat icon order, while CSS derives responsive icon size from the widest calculated row. Mutation and viewport changes rebuild the sequence while preserving identity, Education, and Skills progress. The supplied Skiper31 component informed displacement, rotation, scale, and convergence principles only; its Framer Motion, Lenis, overlapping demo sections, and source layout are not included.
+
+The controller takes ownership only after `data-motion-ready="true"`. Reduced motion creates no pin or animation range: the static Hero, fully dark About, every Education record, and the completed Skills formation remain directly readable in normal vertical document flow.
 
 ## Measurement and cleanup
 

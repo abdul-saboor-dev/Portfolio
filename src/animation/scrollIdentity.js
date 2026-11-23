@@ -5,6 +5,11 @@ import {
   EDUCATION_INTRO_END,
 } from './educationSequence.js';
 import { gsap, ScrollTrigger } from './gsap.js';
+import {
+  createSkillsSequence,
+  SKILLS_ACTIVE_THRESHOLD,
+  SKILLS_INTRO_END,
+} from './skillsSequence.js';
 
 const A_SOURCE_ID = 'glyph-a-01';
 const S_SOURCE_ID = 'glyph-s-01';
@@ -124,6 +129,8 @@ export function createScrollIdentity(root) {
   const about = root.querySelector(ABOUT_SELECTOR);
   const aboutContent = about?.querySelector(ABOUT_CONTENT_SELECTOR);
   const aboutNarrative = about?.querySelector(ABOUT_NARRATIVE_SELECTOR);
+  const educationStage = root.querySelector('.education-stage');
+  const skillsStage = root.querySelector('.skills-stage');
 
   if (
     !aGlyph ||
@@ -134,6 +141,8 @@ export function createScrollIdentity(root) {
     !about ||
     !aboutContent ||
     !aboutNarrative ||
+    !educationStage ||
+    !skillsStage ||
     glyphs.length !== 11
   ) {
     root.dataset.scrollIdentity = 'unavailable';
@@ -155,7 +164,7 @@ export function createScrollIdentity(root) {
   let finalAccessibleState = false;
   let aboutAccessibleState = false;
   let activeSection = null;
-  let refreshState = { education: 0, identity: 0 };
+  let refreshState = { education: 0, identity: 0, skills: 0 };
   let resizeFrame = 0;
   let resizeState = null;
   let contentFrame = 0;
@@ -164,6 +173,7 @@ export function createScrollIdentity(root) {
   let trigger;
   let identityDistance = getIdentityScrollDistance();
   let educationDistance = 0;
+  let skillsDistance = 0;
   let totalDistance = identityDistance;
 
   configureCue(cue);
@@ -245,13 +255,19 @@ export function createScrollIdentity(root) {
     }
   };
 
-  const syncActiveSection = (identityProgress, educationProgress = 0) => {
+  const syncActiveSection = (
+    identityProgress,
+    educationProgress = 0,
+    skillsProgress = 0,
+  ) => {
     const nextSection =
-      educationProgress >= EDUCATION_ACTIVE_THRESHOLD
-        ? 'education'
-        : identityProgress >= ACTIVE_ABOUT_THRESHOLD
-          ? 'about'
-          : 'home';
+      skillsProgress >= SKILLS_ACTIVE_THRESHOLD
+        ? 'skills'
+        : educationProgress >= EDUCATION_ACTIVE_THRESHOLD
+          ? 'education'
+          : identityProgress >= ACTIVE_ABOUT_THRESHOLD
+            ? 'about'
+            : 'home';
     if (nextSection === activeSection) return;
     activeSection = nextSection;
     window.dispatchEvent(
@@ -440,11 +456,13 @@ export function createScrollIdentity(root) {
       return;
     }
     const targetOffset =
-      id === 'education'
-        ? identityDistance + educationDistance * EDUCATION_INTRO_END
-        : id === 'about'
-          ? identityDistance * IDENTITY_HANDOFF
-          : 0;
+      id === 'skills'
+        ? identityDistance + educationDistance + skillsDistance * SKILLS_INTRO_END
+        : id === 'education'
+          ? identityDistance + educationDistance * EDUCATION_INTRO_END
+          : id === 'about'
+            ? identityDistance * IDENTITY_HANDOFF
+            : 0;
     window.scrollTo({
       top: trigger.start + targetOffset,
       behavior: 'smooth',
@@ -455,7 +473,8 @@ export function createScrollIdentity(root) {
     if (
       event.detail?.id === 'home' ||
       event.detail?.id === 'about' ||
-      event.detail?.id === 'education'
+      event.detail?.id === 'education' ||
+      event.detail?.id === 'skills'
     ) {
       navigateToSection(event.detail.id);
     }
@@ -473,13 +492,19 @@ export function createScrollIdentity(root) {
     aboutContent,
     root,
   });
+  const skillsSequence = createSkillsSequence({
+    educationStage,
+    root,
+  });
 
   const measureScrollDistances = () => {
     identityDistance = getIdentityScrollDistance();
     educationDistance = educationSequence.getScrollDistance();
-    totalDistance = identityDistance + educationDistance;
+    skillsDistance = skillsSequence.getScrollDistance();
+    totalDistance = identityDistance + educationDistance + skillsDistance;
     root.dataset.scrollDistance = Math.round(identityDistance).toString();
     root.dataset.educationScrollDistance = Math.round(educationDistance).toString();
+    root.dataset.skillsScrollDistance = Math.round(skillsDistance).toString();
     root.dataset.masterScrollDistance = Math.round(totalDistance).toString();
   };
 
@@ -492,31 +517,51 @@ export function createScrollIdentity(root) {
           : 0,
       identity:
         identityDistance > 0 ? gsap.utils.clamp(0, 1, offset / identityDistance) : 0,
+      skills:
+        skillsDistance > 0
+          ? gsap.utils.clamp(
+              0,
+              1,
+              (offset - identityDistance - educationDistance) / skillsDistance,
+            )
+          : 0,
     };
   };
 
-  const applyScrollState = ({ education, identity }) => {
-    if (education > 0.0001) {
+  const applyScrollState = ({ education, identity, skills }) => {
+    if (skills > 0.0001) {
+      timeline.progress(identity, true);
+      onProgress(identity);
+      educationSequence.setProgress(education);
+      skillsSequence.setProgress(skills);
+    } else if (education > 0.0001) {
+      skillsSequence.resetBoundary();
       timeline.progress(identity, true);
       onProgress(identity);
       educationSequence.setProgress(education);
     } else {
+      skillsSequence.resetBoundary();
       educationSequence.resetBoundary();
       timeline.progress(identity, true);
       onProgress(identity);
     }
     root.dataset.masterScrollProgress = (
       totalDistance > 0
-        ? (identity * identityDistance + education * educationDistance) / totalDistance
+        ? (identity * identityDistance +
+            education * educationDistance +
+            skills * skillsDistance) /
+          totalDistance
         : 0
     ).toFixed(3);
-    syncActiveSection(identity, education);
+    syncActiveSection(identity, education, skills);
   };
 
   if (reducedMotion) {
     applyReducedComposition();
     educationSequence.applyReduced();
+    skillsSequence.applyReduced();
     root.dataset.educationScrollDistance = '0';
+    root.dataset.skillsScrollDistance = '0';
     root.dataset.masterScrollDistance = '0';
     root.dataset.masterScrollProgress = '0.000';
   } else {
@@ -530,10 +575,12 @@ export function createScrollIdentity(root) {
         refreshState = resizeState ?? readScrollState(self);
         timeline.progress(0, true);
         educationSequence.resetBoundary();
+        skillsSequence.resetBoundary();
         clearIdentityTransforms();
         measure();
         timeline.invalidate();
         educationSequence.rebuild();
+        skillsSequence.rebuild();
         measureScrollDistances();
       },
       onRefresh: (self) => {
@@ -541,7 +588,10 @@ export function createScrollIdentity(root) {
           self.start +
           refreshState.identity * identityDistance +
           refreshState.education * educationDistance;
-        if (Math.abs(self.scroll() - restoredScroll) > 1) self.scroll(restoredScroll);
+        const skillsRestoredScroll =
+          restoredScroll + refreshState.skills * skillsDistance;
+        if (Math.abs(self.scroll() - skillsRestoredScroll) > 1)
+          self.scroll(skillsRestoredScroll);
         applyScrollState(refreshState);
         resizeState = null;
         root.dataset.scrollStart = Math.round(self.start).toString();
@@ -569,7 +619,7 @@ export function createScrollIdentity(root) {
 
     const preservedState = trigger
       ? readScrollState(trigger)
-      : { education: 0, identity: 0 };
+      : { education: 0, identity: 0, skills: 0 };
     window.cancelAnimationFrame(contentFrame);
     contentFrame = window.requestAnimationFrame(() => {
       timeline.progress(0, true);
@@ -595,7 +645,7 @@ export function createScrollIdentity(root) {
 
     const preservedState = trigger
       ? readScrollState(trigger)
-      : { education: 0, identity: 0 };
+      : { education: 0, identity: 0, skills: 0 };
     window.cancelAnimationFrame(contentFrame);
     contentFrame = window.requestAnimationFrame(() => {
       educationSequence.rebuild();
@@ -607,6 +657,30 @@ export function createScrollIdentity(root) {
   if (educationTrack) {
     educationObserver.observe(educationTrack, {
       characterData: true,
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  const skillsFormation = root.querySelector('[data-skills-formation]');
+  const skillsObserver = new MutationObserver(() => {
+    if (reducedMotion) {
+      skillsSequence.applyReduced();
+      return;
+    }
+    const preservedState = trigger
+      ? readScrollState(trigger)
+      : { education: 0, identity: 0, skills: 0 };
+    window.cancelAnimationFrame(contentFrame);
+    contentFrame = window.requestAnimationFrame(() => {
+      skillsSequence.rebuild();
+      measureScrollDistances();
+      resizeState = preservedState;
+      ScrollTrigger.refresh();
+    });
+  });
+  if (skillsFormation) {
+    skillsObserver.observe(skillsFormation, {
       childList: true,
       subtree: true,
     });
@@ -636,7 +710,9 @@ export function createScrollIdentity(root) {
 
   const onResize = () => {
     if (reducedMotion) return;
-    resizeState = trigger ? readScrollState(trigger) : { education: 0, identity: 0 };
+    resizeState = trigger
+      ? readScrollState(trigger)
+      : { education: 0, identity: 0, skills: 0 };
     window.cancelAnimationFrame(resizeFrame);
     resizeFrame = window.requestAnimationFrame(() => ScrollTrigger.refresh());
   };
@@ -649,11 +725,13 @@ export function createScrollIdentity(root) {
       cue.removeEventListener('click', onCueClick);
       contentObserver.disconnect();
       educationObserver.disconnect();
+      skillsObserver.disconnect();
       window.cancelAnimationFrame(resizeFrame);
       window.cancelAnimationFrame(contentFrame);
       trigger?.kill();
       timeline?.kill();
       educationSequence.destroy();
+      skillsSequence.destroy();
       cueRevealTween?.kill();
       destination.setAttribute('aria-hidden', 'true');
       wordmark.removeAttribute('aria-hidden');
@@ -684,6 +762,7 @@ export function createScrollIdentity(root) {
       delete root.dataset.scrollStart;
       delete root.dataset.scrollDistance;
       delete root.dataset.educationScrollDistance;
+      delete root.dataset.skillsScrollDistance;
       delete root.dataset.masterScrollDistance;
       delete root.dataset.masterScrollProgress;
       delete root.dataset.identityState;

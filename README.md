@@ -2,7 +2,7 @@
 
 Production development environment for a cinematic React portfolio built around a kinetic typographic identity.
 
-Phase 00.5 provides a separate Sanity Studio workspace and validated published-content access layer. Phase 03 preserves the responsive ABDUL / SABOOR Hero, approved circular entrance, original-glyph A/S extraction, and pinned About reading sequence, then extends the same native-scroll controller into a borderless horizontal Education experience. Hero content, CV PDF, About narrative, and repeatable ordered Education records are bounded Sanity fields. Skills and later sections are not implemented yet.
+Phase 04 preserves the approved Hero, circular entrance, original-glyph A/S extraction, About reading sequence, and Education carousel, then extends the same native-scroll controller into a vertical Skills formation. The supplied technology marks form a responsive inverted pyramid with the code symbol arriving last. Sanity provides a searchable, sortable Skills Library without coupling CMS requests to animation frames. Projects and later sections are not implemented yet.
 
 No live Sanity project is connected by default.
 
@@ -25,6 +25,8 @@ npm run test:identity
 npm run test:e2e
 npm run visual:hero
 npm run visual:kinetic
+npm run visual:education
+npm run visual:skills
 npm run visual:type
 npm run verify
 ```
@@ -37,9 +39,12 @@ Sanity Studio commands:
 npm run studio:dev
 npm run studio:build
 npm run studio:schema
+npm run skills:import -- --catalog <path-to-ICON_CATALOG.json>
 ```
 
 Copy `.env.example` to `.env.local` and `studio/.env.example` to `studio/.env.local` after creating a Sanity project. See [CMS setup and deployment](docs/CMS.md) for the security boundary, roles, preview limitations, and production checklist.
+
+The Skills import command is a read-only dry run unless `--commit` is supplied. A committed import additionally requires `SANITY_STUDIO_PROJECT_ID` and `SANITY_AUTH_TOKEN`; never put that token in a `VITE_*` variable. Only the approved public marks and permanent code symbol are bundled locally. Devicon assets retain their MIT notice at `public/skills/DEVICON_LICENSE.txt`; motion principles were studied from the supplied Skiper UI reference and reimplemented in GSAP without copying its component or layout.
 
 ## Project guidance
 

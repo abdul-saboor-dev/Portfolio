@@ -2,7 +2,7 @@
 
 ## Status
 
-Kinetic Identity is the approved visual direction. The former spiral-led concept is permanently retired. Phase 03 extends the approved Hero, A₁/S₁ transformation, and About reading experience into a native-scroll Education carousel. Skills and later portfolio scenes remain out of scope.
+Kinetic Identity is the approved visual direction. The former spiral-led concept is permanently retired. Phase 04 extends the approved Hero, A₁/S₁ transformation, About reading experience, and Education carousel into a vertical Skills formation. Projects and later portfolio scenes remain out of scope.
 
 ## Core idea
 
@@ -80,6 +80,7 @@ The first two steps are implemented by the Phase 01B entrance system. The remain
 5. Native scroll detaches A₁ and S₁, coordinates the two word lanes and supporting content out of the composition, and uniformly scales and overlaps the unchanged source glyphs into the top-left AS monogram. The About composition is already fixed in its final geometry and uncovers during that same movement.
 6. At the exact monogram handoff, the complete About narrative is visible in secondary gray and no reading progression has started. Further native scroll darkens words in document order without changing their position, weight, spacing, or wrapping. The last ten percent of the master range is a short completed-reading hold. Reverse scrolling restores the color sequence, About reveal, and Hero continuously.
 7. Continued native scroll clears the completed About composition with a restrained horizontal mask while the first Education record emerges into the same fixed stage. Once the first record is legible, vertical progress translates one borderless Education surface horizontally. The final record holds before the scroll range ends, and reverse scrolling reconstructs the complete About composition.
+8. After the final Education hold, its horizontal language contracts toward the center while Skills establishes a vertical direction. Ordered, supplied technology marks descend into calculated inverted-pyramid rows. The permanent code symbol rises from below last, then the completed composition holds. Reverse scrolling dismantles the formation and restores Education without a second ScrollTrigger.
 
 The load-triggered assembly and scroll-triggered extraction are separate systems. Scroll motion remains freely reversible with no snapping, locking, checkpoints, or wheel interception.
 
@@ -87,13 +88,13 @@ The load-triggered assembly and scroll-triggered extraction are separate systems
 
 - Compose and verify desktop, laptop, tablet, 390 px, 375 px, 320 px, and landscape-mobile layouts independently.
 - Preserve semantic order, heading accessibility, readable supporting text, keyboard access, and stable layout.
-- The reduced-motion state presents the completed static Hero followed by normal-flow, fully readable About and Education sections. It does not pin, translate records horizontally, or require color progression for comprehension.
+- The reduced-motion state presents the completed static Hero followed by normal-flow, fully readable About, Education, and Skills sections. It does not pin, translate records horizontally, or require motion for comprehension.
 - Use transform-based future animation and avoid React state updates on animation frames.
 - Do not duplicate accessible name content inside the motion layer.
 
 ## Content integrity
 
-The name **ABDUL SABOOR**, the approved Hero statements, introduction, About narrative, and three supplied Education records are the only approved visible personal copy in this phase. Hero and About fields remain bounded Sanity content. Education is a repeatable ordered collection with bounded institution, qualification, stage, status, year, and description fields. Safe fallbacks preserve the supplied records without limiting the CMS to three entries. Do not invent biography, services, project claims, experience, awards, statistics, testimonials, dates, or additional supporting sentences.
+The name **ABDUL SABOOR**, approved Hero statements, introduction, About narrative, three supplied Education records, and owner-approved technology selection are the only approved personal content in this phase. Skills use supplied original-color assets and a sortable visible/hidden CMS library; source-library entries never imply proficiency until the owner enables them. Do not invent biography, projects, experience, awards, metrics, or additional claims.
 
 ## Prohibited direction
 
