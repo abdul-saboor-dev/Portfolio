@@ -1010,6 +1010,7 @@ a.hero-navigation__item {
   width: 100%;
   height: 100%;
   min-height: 0;
+  gap: clamp(1.25rem, 2.8vh, 2.25rem);
   grid-template-rows: auto minmax(0, 1fr);
   clip-path: inset(0 0 100% 0);
 }
@@ -1029,24 +1030,58 @@ a.hero-navigation__item {
   text-transform: uppercase;
 }
 
-.skills-stage__formation {
-  --skills-gap: clamp(0.75rem, 1.45vw, 1.55rem);
-  --skills-icon-size: min(
-    clamp(2.75rem, 5.2vw, 5.25rem),
-    calc(
-      (
-          100vw - clamp(3rem, 12vw, 12rem) - (var(--skills-max-row) - 1) *
-            var(--skills-gap)
-        ) /
-        var(--skills-max-row)
-    )
-  );
+.skills-stage__body {
   display: grid;
   min-width: 0;
   min-height: 0;
+  grid-template-columns: minmax(15rem, 0.72fr) minmax(34rem, 1.38fr);
+  gap: clamp(2.5rem, 5vw, 6.5rem);
+  align-items: center;
+}
+
+.skills-stage__copy {
+  max-width: 29rem;
+  align-self: center;
+}
+
+.skills-stage__copy h3 {
+  max-width: 9ch;
+  margin: 0;
+  color: var(--text-primary);
+  font-family: 'Archivo', sans-serif;
+  font-size: clamp(2.5rem, 3.65vw, 3.8rem);
+  font-weight: 650;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.skills-stage__copy p {
+  max-width: 34ch;
+  margin: clamp(1.15rem, 2.2vh, 1.7rem) 0 0;
+  color: var(--text-secondary);
+  font-family: 'Archivo', sans-serif;
+  font-size: clamp(1rem, 1.2vw, 1.18rem);
+  font-weight: 430;
+  letter-spacing: -0.018em;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.skills-stage__formation {
+  --skills-gap: clamp(0.8rem, 1.35vw, 1.35rem);
+  --skills-icon-size: min(
+    clamp(4.5rem, 6.6vw, 6.75rem),
+    calc((100% - (var(--skills-max-row) - 1) * var(--skills-gap)) / var(--skills-max-row))
+  );
+  display: grid;
+  width: min(100%, 56rem);
+  min-width: 0;
+  min-height: 0;
   align-content: center;
+  justify-self: end;
   justify-items: center;
-  gap: clamp(0.45rem, 1vh, 0.85rem);
+  gap: clamp(0.5rem, 1.15vh, 0.9rem);
 }
 
 .skills-stage__row {
@@ -1057,10 +1092,10 @@ a.hero-navigation__item {
   align-items: center;
   justify-content: center;
   list-style: none;
+  transform: translate(var(--skills-row-x, 0), var(--skills-row-y, 0));
 }
 
-.skills-stage__item,
-.skills-stage__code {
+.skills-stage__item {
   display: grid;
   width: var(--skills-icon-size);
   height: var(--skills-icon-size);
@@ -1069,21 +1104,11 @@ a.hero-navigation__item {
   will-change: transform, opacity;
 }
 
-.skills-stage__icon,
-.skills-stage__code img {
+.skills-stage__icon {
   display: block;
-  width: 82%;
-  height: 82%;
+  width: 91%;
+  height: 91%;
   object-fit: contain;
-}
-
-.skills-stage__code {
-  margin-top: clamp(0.2rem, 0.7vh, 0.65rem);
-}
-
-.skills-stage__code img {
-  width: 100%;
-  height: 100%;
 }
 
 .skills-stage__fallback {
@@ -1307,6 +1332,31 @@ a.hero-navigation__item {
     grid-template-columns: minmax(8rem, 0.3fr) minmax(0, 1fr);
     gap: clamp(2rem, 5vw, 4rem);
   }
+
+  .skills-stage__body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: clamp(1.5rem, 3vh, 2.5rem);
+  }
+
+  .skills-stage__copy {
+    max-width: 40rem;
+  }
+
+  .skills-stage__copy h3 {
+    max-width: none;
+    font-size: clamp(2.25rem, 6vw, 3.25rem);
+  }
+
+  .skills-stage__copy p {
+    max-width: 42ch;
+  }
+
+  .skills-stage__formation {
+    width: 100%;
+    padding-top: clamp(1.25rem, 2.5vh, 2rem);
+    justify-self: center;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1520,18 +1570,62 @@ a.hero-navigation__item {
   }
 
   .skills-stage {
-    padding-top: max(4.4rem, calc(env(safe-area-inset-top) + 3.75rem));
+    padding-top: max(6.15rem, calc(env(safe-area-inset-top) + 5.5rem));
+  }
+
+  .skills-stage__content {
+    gap: clamp(0.75rem, 2vh, 1.1rem);
+  }
+
+  .skills-stage__body {
+    height: 100%;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: clamp(1.5rem, 3.6vh, 2.25rem);
+    align-content: stretch;
+  }
+
+  .skills-stage__copy h3 {
+    max-width: 10ch;
+    font-size: clamp(1.8rem, 8.4vw, 2.3rem);
+    line-height: 1;
+  }
+
+  .skills-stage__copy p {
+    max-width: 35ch;
+    margin-top: clamp(0.65rem, 1.6vh, 0.9rem);
+    font-size: clamp(0.9rem, 3.8vw, 1rem);
+    line-height: 1.4;
   }
 
   .skills-stage__formation {
-    --skills-gap: clamp(0.45rem, 2.3vw, 1.15rem);
+    --skills-gap: clamp(0.38rem, 1.9vw, 0.6rem);
     --skills-icon-size: min(
-      clamp(2.25rem, 10vw, 4.5rem),
+      clamp(2.7rem, 16vw, 3.5rem),
       calc(
-        (
-            100vw - clamp(2.5rem, 8vw, 5rem) - (var(--skills-max-row) - 1) *
-              var(--skills-gap)
-          ) /
+        (100vw - 2rem - (var(--skills-max-row) - 1) * var(--skills-gap)) /
+          var(--skills-max-row)
+      )
+    );
+    width: min(100%, 26rem);
+    height: min(100%, 32rem);
+    align-content: space-evenly;
+    align-self: start;
+    justify-self: center;
+    gap: clamp(0.35rem, 1vh, 0.7rem);
+  }
+
+  .skills-stage__icon {
+    width: 95%;
+    height: 95%;
+  }
+}
+
+@media (max-width: 390px) and (max-height: 700px) and (orientation: portrait) {
+  .skills-stage__formation {
+    --skills-icon-size: min(
+      clamp(2.25rem, 11.8vw, 2.75rem),
+      calc(
+        (100vw - 2rem - (var(--skills-max-row) - 1) * var(--skills-gap)) /
           var(--skills-max-row)
       )
     );
@@ -1548,9 +1642,32 @@ a.hero-navigation__item {
     font-size: 0.68rem;
   }
 
+  .skills-stage__content {
+    gap: 0.45rem;
+  }
+
+  .skills-stage__body {
+    grid-template-columns: minmax(12rem, 0.75fr) minmax(24rem, 1.25fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+
+  .skills-stage__copy h3 {
+    max-width: 9ch;
+    font-size: clamp(1.65rem, 4.2vw, 2.2rem);
+  }
+
+  .skills-stage__copy p {
+    max-width: 31ch;
+    margin-top: 0.6rem;
+    font-size: clamp(0.78rem, 1.8vw, 0.92rem);
+    line-height: 1.3;
+  }
+
   .skills-stage__formation {
     --skills-gap: clamp(0.35rem, 1.3vw, 0.75rem);
-    --skills-icon-size: min(8.4vh, 3rem);
+    --skills-icon-size: min(10.5vh, 3.2rem);
+    padding-top: 0;
     gap: 0.2rem;
   }
 }
@@ -1817,8 +1934,8 @@ a.hero-navigation__item {
   }
 
   .skills-stage__item,
-  .skills-stage__code,
-  .skills-stage__header {
+  .skills-stage__header,
+  .skills-stage__copy {
     opacity: 1 !important;
     transform: none !important;
     will-change: auto;

@@ -1,5 +1,5 @@
 import { useMemo, useSyncExternalStore } from 'react';
-import { buildPyramidRows } from '../skills/pyramidLayout.js';
+import { buildPyramidRows, getIrregularRowPlacement } from '../skills/pyramidLayout.js';
 
 function SkillIcon({ skill, index }) {
   const handleError = (event) => {
@@ -17,6 +17,7 @@ function SkillIcon({ skill, index }) {
     <li
       className="skills-stage__item"
       data-skill-index={index}
+      data-skill-id={skill._id}
       data-skill-row={skill.rowIndex}
       data-skill-column={skill.columnIndex}
     >
@@ -37,7 +38,7 @@ function SkillIcon({ skill, index }) {
   );
 }
 
-function SkillsSection({ skills }) {
+function SkillsSection({ presentation, skills }) {
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -61,16 +62,30 @@ function SkillsSection({ skills }) {
           <h2 id="skills-heading">Skills</h2>
         </header>
 
-        <div className="skills-stage__formation" data-skills-formation>
-          {rows.map((row, rowIndex) => (
-            <ul className="skills-stage__row" key={`skill-row-${rowIndex}`}>
-              {row.map((skill) => (
-                <SkillIcon key={skill._id} skill={skill} index={skill.itemIndex} />
-              ))}
-            </ul>
-          ))}
-          <div className="skills-stage__code" data-skills-code aria-hidden="true">
-            <img src="/skills/svg/code-symbol.svg" alt="" width="72" height="72" />
+        <div className="skills-stage__body">
+          <div className="skills-stage__copy" data-skills-copy>
+            <h3>{presentation.heading}</h3>
+            <p>{presentation.description}</p>
+          </div>
+
+          <div className="skills-stage__formation" data-skills-formation>
+            {rows.map((row, rowIndex) => {
+              const placement = getIrregularRowPlacement(rowIndex, row.length, maxRow);
+              return (
+                <ul
+                  className="skills-stage__row"
+                  key={`skill-row-${rowIndex}`}
+                  style={{
+                    '--skills-row-x': `calc(${placement.x} * var(--skills-icon-size))`,
+                    '--skills-row-y': `calc(${placement.y} * var(--skills-icon-size))`,
+                  }}
+                >
+                  {row.map((skill) => (
+                    <SkillIcon key={skill._id} skill={skill} index={skill.itemIndex} />
+                  ))}
+                </ul>
+              );
+            })}
           </div>
         </div>
       </div>

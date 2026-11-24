@@ -10,6 +10,7 @@ const HERO_SECTIONS = Object.freeze([
 ]);
 
 const INITIAL_AVAILABLE_SECTIONS = Object.freeze(['home']);
+const TIMELINE_SECTION_IDS = new Set(['home', 'about', 'education', 'skills']);
 
 function SectionItem({ section, activeId, availableIds, onNavigate, mobile = false }) {
   const isAvailable = availableIds.includes(section.id);
@@ -83,6 +84,7 @@ function HeroNavigation() {
   const scrollPositionRef = useRef(0);
   const previousOverflowRef = useRef('');
   const pageLockedRef = useRef(false);
+  const pendingNavigationRef = useRef(null);
 
   useEffect(() => {
     let isCurrent = true;
@@ -114,6 +116,7 @@ function HeroNavigation() {
 
   useEffect(() => {
     const sectionElements = availableIds
+      .filter((id) => !TIMELINE_SECTION_IDS.has(id))
       .map((id) => document.getElementById(id))
       .filter(Boolean);
     if (sectionElements.length === 0) return undefined;
@@ -223,6 +226,8 @@ function HeroNavigation() {
     if (menuPhase === 'closing') {
       dialog.inert = true;
       const finishClose = () => {
+        const pendingNavigation = pendingNavigationRef.current;
+        pendingNavigationRef.current = null;
         if (dialog.open) dialog.close();
         dialog.inert = false;
         gsap.set([surface, panel, ...items, menuLabel, closeLabel, ...markLines], {
@@ -234,9 +239,10 @@ function HeroNavigation() {
           pageLockedRef.current = false;
         }
         setMenuPhase('closed');
-        window.requestAnimationFrame(() =>
-          triggerRef.current?.focus({ preventScroll: true }),
-        );
+        window.requestAnimationFrame(() => {
+          triggerRef.current?.focus({ preventScroll: true });
+          pendingNavigation?.();
+        });
       };
 
       if (reducedMotion) {
@@ -285,6 +291,7 @@ function HeroNavigation() {
         window.scrollTo(0, scrollPositionRef.current);
         pageLockedRef.current = false;
       }
+      pendingNavigationRef.current = null;
     },
     [],
   );
@@ -297,7 +304,10 @@ function HeroNavigation() {
   };
   const navigateToSection = (section, event) => {
     const isTimelineSection =
-      section.id === 'home' || section.id === 'about' || section.id === 'education';
+      section.id === 'home' ||
+      section.id === 'about' ||
+      section.id === 'education' ||
+      section.id === 'skills';
     if (!isTimelineSection && menuPhase === 'closed') return;
 
     event.preventDefault();
@@ -316,7 +326,7 @@ function HeroNavigation() {
       return;
     }
 
-    dialogRef.current?.addEventListener('close', completeNavigation, { once: true });
+    pendingNavigationRef.current = completeNavigation;
     closeMenu();
   };
   const isMenuActive = menuPhase !== 'closed';

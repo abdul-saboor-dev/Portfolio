@@ -13,9 +13,7 @@ if (!catalogPath) {
   );
   process.exitCode = 1;
 } else {
-  const records = JSON.parse(await readFile(catalogPath, 'utf8')).filter(
-    ({ slug }) => slug !== 'code-symbol',
-  );
+  const records = JSON.parse(await readFile(catalogPath, 'utf8'));
   const catalogRoot = dirname(catalogPath);
   const missing = [];
   for (const record of records) {

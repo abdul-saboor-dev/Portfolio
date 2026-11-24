@@ -16,6 +16,8 @@ import {
   HERO_STATEMENT_MAX_LENGTH,
   PROJECTS_ACTION_LABEL_MAX_LENGTH,
   SKILL_STATUSES,
+  SKILLS_DESCRIPTION_MAX_LENGTH,
+  SKILLS_HEADING_MAX_LENGTH,
 } from '@portfolio/content-model';
 
 test('the Studio exposes every required content document type', () => {
@@ -33,7 +35,20 @@ test('the Studio exposes every required content document type', () => {
     'siteSettings',
     'skill',
     'skillCategory',
+    'skillsPresentation',
   ]);
+});
+
+test('the Studio exposes bounded Skills presentation copy', () => {
+  const presentation = schemaTypes.find(({ name }) => name === 'skillsPresentation');
+  const heading = presentation.fields.find(({ name }) => name === 'heading');
+  const description = presentation.fields.find(({ name }) => name === 'description');
+
+  assert.match(heading.description, new RegExp(String(SKILLS_HEADING_MAX_LENGTH)));
+  assert.match(
+    description.description,
+    new RegExp(String(SKILLS_DESCRIPTION_MAX_LENGTH)),
+  );
 });
 
 test('the Studio Skills Library exposes searchable media, status, visibility, and order', () => {
@@ -100,6 +115,7 @@ test('global portfolio documents use fixed singleton IDs', () => {
     'contact',
     'profile',
     'siteSettings',
+    'skillsPresentation',
   ]);
 });
 

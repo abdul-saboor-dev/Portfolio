@@ -29,6 +29,10 @@ export const PORTFOLIO_CONTENT_QUERY = `{
     description,
     order
   },
+  "skillsPresentation": *[_type == "skillsPresentation" && _id == "skillsPresentation"][0]{
+    heading,
+    description
+  },
   "skills": *[_type == "skill" && visible == true] | order(order asc, name asc, _id asc){
     _id,
     name,

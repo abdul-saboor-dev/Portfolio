@@ -16,6 +16,11 @@ export const EDUCATION_YEAR_MIN = 1900;
 export const EDUCATION_YEAR_MAX = 2100;
 export const EDUCATION_STATUSES = Object.freeze(['In Progress', 'Completed']);
 export const SKILL_STATUSES = Object.freeze(['Working With', 'Learning']);
+export const SKILLS_HEADING_MAX_LENGTH = 60;
+export const SKILLS_DESCRIPTION_MAX_LENGTH = 180;
+export const APPROVED_SKILLS_HEADING = 'Built with curiosity.';
+export const APPROVED_SKILLS_DESCRIPTION =
+  'A growing collection of technologies I use, explore, and learn.';
 
 const skill = (slug, name, category, aliases, order) =>
   Object.freeze({

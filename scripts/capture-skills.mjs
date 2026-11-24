@@ -2,22 +2,27 @@ import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 
 const baseUrl = process.env.PORTFOLIO_PREVIEW_URL ?? 'http://127.0.0.1:4173';
-const outputDirectory = 'test-results/skills-phase-04';
+const outputDirectory = 'test-results/skills-phase-041';
 const formats = [
   { name: 'desktop', record: true, viewport: { width: 1440, height: 900 } },
+  { name: 'laptop', record: false, viewport: { width: 1280, height: 800 } },
+  { name: 'tablet', record: false, viewport: { width: 768, height: 1024 } },
   { name: 'mobile', record: true, viewport: { width: 390, height: 844 } },
+  { name: 'mobile-short', record: false, viewport: { width: 375, height: 667 } },
   { name: 'narrow-mobile', record: false, viewport: { width: 320, height: 568 } },
+  { name: 'mobile-landscape', record: false, viewport: { width: 844, height: 390 } },
 ];
 const frames = [
   { name: '01-education-final', progress: 0 },
   { name: '02-handoff-start', progress: 0.08 },
   { name: '03-handoff-midpoint', progress: 0.16 },
-  { name: '04-first-row-entering', progress: 0.3 },
-  { name: '05-partial-formation', progress: 0.5 },
-  { name: '06-nearly-complete', progress: 0.76 },
-  { name: '07-code-symbol-rising', progress: 0.82 },
+  { name: '04-first-row-fan', progress: 0.32 },
+  { name: '05-fan-convergence', progress: 0.52 },
+  { name: '06-settling-boundary', progress: 0.75 },
+  { name: '07-final-row-settling', progress: 0.8 },
   { name: '08-complete-hold', progress: 1 },
-  { name: '09-reverse-intermediate', progress: 0.48 },
+  { name: '09-reverse-fan', progress: 0.52 },
+  { name: '10-reverse-education', progress: 0 },
 ];
 
 await mkdir(outputDirectory, { recursive: true });
@@ -86,6 +91,7 @@ try {
             itemCount: Number(stage.dataset.itemCount),
             progress: Number(stage.dataset.skillsProgress),
             state: stage.dataset.skillsState,
+            stageCount: document.querySelectorAll('.skills-stage').length,
             horizontalOverflow:
               document.documentElement.scrollWidth > document.documentElement.clientWidth,
           };

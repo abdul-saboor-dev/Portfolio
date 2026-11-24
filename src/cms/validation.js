@@ -6,6 +6,8 @@ import {
   APPROVED_HERO_STATEMENTS,
   APPROVED_IDENTITY_TAGLINES,
   APPROVED_SKILLS,
+  APPROVED_SKILLS_DESCRIPTION,
+  APPROVED_SKILLS_HEADING,
   CV_ACTION_LABEL_MAX_LENGTH,
   EDUCATION_ACADEMIC_YEAR_MAX_LENGTH,
   EDUCATION_DESCRIPTION_MAX_LENGTH,
@@ -23,6 +25,8 @@ import {
   IDENTITY_TAGLINE_MIN_LENGTH,
   PROJECTS_ACTION_LABEL_MAX_LENGTH,
   SKILL_STATUSES,
+  SKILLS_DESCRIPTION_MAX_LENGTH,
+  SKILLS_HEADING_MAX_LENGTH,
 } from '@portfolio/content-model';
 import { z } from 'zod';
 
@@ -142,6 +146,11 @@ const skillSchema = z.object({
   order: z.number().int().min(0).default(0),
 });
 
+const skillsPresentationSchema = z.object({
+  heading: z.string().trim().min(1).max(SKILLS_HEADING_MAX_LENGTH),
+  description: z.string().trim().min(1).max(SKILLS_DESCRIPTION_MAX_LENGTH),
+});
+
 const skillCategorySchema = z.object({
   _id: z.string(),
   title: z.string().trim().min(1).max(60),
@@ -203,6 +212,10 @@ export const FALLBACK_CONTENT = Object.freeze({
   }),
   about: Object.freeze({ narrative: APPROVED_ABOUT_NARRATIVE }),
   education: APPROVED_EDUCATION_RECORDS,
+  skillsPresentation: Object.freeze({
+    heading: APPROVED_SKILLS_HEADING,
+    description: APPROVED_SKILLS_DESCRIPTION,
+  }),
   skills: APPROVED_SKILLS,
   skillCategories: Object.freeze([]),
   projects: Object.freeze([]),
@@ -268,6 +281,13 @@ export function validatePortfolioContent(rawValue) {
       raw.skills,
       FALLBACK_CONTENT.skills,
       'skills',
+      issues,
+    ),
+    skillsPresentation: parseSection(
+      skillsPresentationSchema,
+      raw.skillsPresentation,
+      FALLBACK_CONTENT.skillsPresentation,
+      'skillsPresentation',
       issues,
     ),
     skillCategories: parseSection(

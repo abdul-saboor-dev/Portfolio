@@ -27,7 +27,7 @@ export const getEducationScrollDistance = (recordCount) => {
   );
 };
 
-export function createEducationSequence({ about, aboutContent, root }) {
+export function createEducationSequence({ aboutContent, root }) {
   const stage = root.querySelector('.education-stage');
   const content = stage?.querySelector('.education-stage__content');
   const track = stage?.querySelector('[data-education-track]');
@@ -49,7 +49,6 @@ export function createEducationSequence({ about, aboutContent, root }) {
   const hold = { progress: 0 };
   let records = [];
   let travel = 0;
-  let accessible = false;
 
   const measure = () => {
     records = [...track.querySelectorAll('[data-education-record]')];
@@ -59,16 +58,6 @@ export function createEducationSequence({ about, aboutContent, root }) {
     stage.dataset.recordCount = records.length.toString();
     stage.dataset.horizontalTravel = travel.toFixed(2);
     return { records, travel };
-  };
-
-  const syncAccessibility = (progress) => {
-    const nextAccessible = progress > 0.03;
-    if (nextAccessible === accessible) return;
-    accessible = nextAccessible;
-    stage.setAttribute('aria-hidden', String(!nextAccessible));
-    stage.inert = !nextAccessible;
-    about.setAttribute('aria-hidden', String(nextAccessible));
-    about.inert = nextAccessible;
   };
 
   const syncState = (progress) => {
@@ -98,13 +87,18 @@ export function createEducationSequence({ about, aboutContent, root }) {
     root.dataset.educationState = stage.dataset.educationState;
   };
 
+  const applyInitialBoundary = () => {
+    gsap.set(stage, { autoAlpha: 0 });
+    gsap.set(content, { clipPath: 'inset(0 100% 0 0)' });
+    gsap.set(track, { x: 0 });
+  };
+
   const rebuild = () => {
     timeline.clear();
     measure();
     hold.progress = 0;
 
     timeline
-      .set(stage, { autoAlpha: 1 }, 0)
       .set(content, { clipPath: 'inset(0 100% 0 0)' }, 0)
       .set(track, { x: 0 }, 0)
       .fromTo(
@@ -143,35 +137,26 @@ export function createEducationSequence({ about, aboutContent, root }) {
       );
 
     timeline.progress(0, true);
+    applyInitialBoundary();
     syncState(0);
   };
 
   const setProgress = (value) => {
     const progress = clamp(0, 1, value);
     timeline.progress(progress, true);
-    syncAccessibility(progress);
+    gsap.set(stage, { autoAlpha: progress > 0.0001 ? 1 : 0 });
     syncState(progress);
   };
 
   const resetBoundary = () => {
-    timeline.progress(0, true);
-    about.setAttribute('aria-hidden', 'false');
-    about.inert = false;
-    if (accessible) {
-      accessible = false;
-      stage.setAttribute('aria-hidden', 'true');
-      stage.inert = true;
-    }
+    gsap.set(stage, { autoAlpha: 0 });
     syncState(0);
   };
 
   const applyReduced = () => {
     measure();
-    accessible = true;
     stage.setAttribute('aria-hidden', 'false');
     stage.inert = false;
-    about.setAttribute('aria-hidden', 'false');
-    about.inert = false;
     gsap.set(stage, { autoAlpha: 1 });
     gsap.set(content, { clearProps: 'clipPath' });
     gsap.set(track, { clearProps: 'transform' });

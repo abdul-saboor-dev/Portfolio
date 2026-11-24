@@ -1,4 +1,10 @@
-export const singletonTypes = new Set(['profile', 'about', 'contact', 'siteSettings']);
+export const singletonTypes = new Set([
+  'profile',
+  'about',
+  'skillsPresentation',
+  'contact',
+  'siteSettings',
+]);
 
 function singletonItem(S, title, schemaType, documentId) {
   return S.listItem()
@@ -34,6 +40,7 @@ export const structure = (S) =>
       orderedList(S, 'Education', 'education', 'startYear'),
       orderedList(S, 'Projects', 'project'),
       S.divider(),
+      singletonItem(S, 'Skills presentation', 'skillsPresentation', 'skillsPresentation'),
       orderedList(S, 'Skill categories', 'skillCategory'),
       S.listItem()
         .title('Skills Library')

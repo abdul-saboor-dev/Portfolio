@@ -47,7 +47,7 @@ Sanity automatically maintains draft and published versions of documents. Projec
 Recommended verification after credentials are configured:
 
 1. Sign in as the owner and confirm the Studio loads.
-2. Create the singleton Profile, About, Contact, and Site Settings documents through the dedicated navigation items. Profile owns exactly three Hero statements (32 characters each), the Hero introduction (130), Projects label/destination, CV label, and PDF; About owns the single narrative (650). Education is a repeatable ordered collection: add, edit, remove, and reorder entries without changing frontend code. Lower display-order values appear first, with start year and document ID providing stable tie-breaks.
+2. Create the singleton Profile, About, Skills Presentation, Contact, and Site Settings documents through the dedicated navigation items. Profile owns exactly three Hero statements (32 characters each), the Hero introduction (130), Projects label/destination, CV label, and PDF; About owns the single narrative (650). Skills Presentation owns the bounded editorial heading and description that accompany the dynamic logo formation. Education is a repeatable ordered collection: add, edit, remove, and reorder entries without changing frontend code. Lower display-order values appear first, with start year and document ID providing stable tie-breaks.
 3. Enter the six approved taglines and verify that a seventh, duplicate, multiline, or overlong tagline is rejected.
 4. Use Skills Library to search by name or alias, browse by category, upload or replace a logo, set Working With/Learning status, control public visibility, and assign a numeric display order. Hidden records remain editable without being returned by the public query.
 5. Optionally upload the owner's real CV as a PDF in Profile and confirm the published frontend enables the in-page viewer. Without a published file, the View CV action is withheld.
@@ -114,7 +114,7 @@ As of November 16, 2026, this repository uses registry-current Sanity Studio `6.
 - a published-only CDN client;
 - one consolidated GROQ request for portfolio content;
 - section-by-section Zod validation so one malformed document does not erase unrelated content;
-- approved fallback identity, About, Education, and Skills content, plus empty fallbacks for unprovided later sections;
+- approved fallback identity, About, Education, Skills presentation, and Skills Library content, plus empty fallbacks for unprovided later sections;
 - cached retrieval so scroll animation code never performs CMS requests;
 - safe image URL and loading helpers; and
 - a reusable `usePortfolioContent` hook for later phases.

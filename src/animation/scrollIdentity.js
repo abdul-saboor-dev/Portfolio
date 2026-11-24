@@ -130,6 +130,7 @@ export function createScrollIdentity(root) {
   const aboutContent = about?.querySelector(ABOUT_CONTENT_SELECTOR);
   const aboutNarrative = about?.querySelector(ABOUT_NARRATIVE_SELECTOR);
   const educationStage = root.querySelector('.education-stage');
+  const educationContent = educationStage?.querySelector('.education-stage__content');
   const skillsStage = root.querySelector('.skills-stage');
 
   if (
@@ -142,6 +143,7 @@ export function createScrollIdentity(root) {
     !aboutContent ||
     !aboutNarrative ||
     !educationStage ||
+    !educationContent ||
     !skillsStage ||
     glyphs.length !== 11
   ) {
@@ -162,7 +164,6 @@ export function createScrollIdentity(root) {
   const phaseState = { hold: 0 };
   let aboutWords = [...about.querySelectorAll(ABOUT_WORD_SELECTOR)];
   let finalAccessibleState = false;
-  let aboutAccessibleState = false;
   let activeSection = null;
   let refreshState = { education: 0, identity: 0, skills: 0 };
   let resizeFrame = 0;
@@ -246,13 +247,26 @@ export function createScrollIdentity(root) {
       if (nextFinal) wordmark.setAttribute('aria-hidden', 'true');
       else wordmark.removeAttribute('aria-hidden');
     }
+  };
 
-    const nextAboutAccessible = progress >= ABOUT_REVEAL_START;
-    if (nextAboutAccessible !== aboutAccessibleState) {
-      aboutAccessibleState = nextAboutAccessible;
-      about.setAttribute('aria-hidden', String(!nextAboutAccessible));
-      about.inert = !nextAboutAccessible;
-    }
+  const syncSceneAccessibility = (
+    identityProgress,
+    educationProgress = 0,
+    skillsProgress = 0,
+  ) => {
+    const skillsAccessible = skillsProgress > 0.12;
+    const educationAccessible = educationProgress > 0.03 && !skillsAccessible;
+    const aboutAccessible =
+      identityProgress >= ABOUT_REVEAL_START &&
+      !educationAccessible &&
+      skillsProgress <= 0.0001;
+
+    about.setAttribute('aria-hidden', String(!aboutAccessible));
+    about.inert = !aboutAccessible;
+    educationStage.setAttribute('aria-hidden', String(!educationAccessible));
+    educationStage.inert = !educationAccessible;
+    skillsStage.setAttribute('aria-hidden', String(!skillsAccessible));
+    skillsStage.inert = !skillsAccessible;
   };
 
   const syncActiveSection = (
@@ -293,6 +307,10 @@ export function createScrollIdentity(root) {
       1,
       (progress - READING_START) / (READING_END - READING_START),
     );
+
+    gsap.set(about, {
+      autoAlpha: progress >= ABOUT_REVEAL_START ? 1 : 0,
+    });
 
     if (!reducedMotion) {
       const cueProgress = gsap.utils.clamp(0, 1, progress / 0.07);
@@ -337,7 +355,6 @@ export function createScrollIdentity(root) {
         : 0;
 
     timeline
-      .set(about, { autoAlpha: 1 }, 0)
       .set(aboutContent, { clipPath: 'inset(0 0 100% 0)' }, 0)
       .set(aboutWords, { color: UNREAD_COLOR }, 0)
       .to(
@@ -431,7 +448,6 @@ export function createScrollIdentity(root) {
   };
 
   const applyReducedComposition = () => {
-    aboutAccessibleState = true;
     about.setAttribute('aria-hidden', 'false');
     about.inert = false;
     wordmark.removeAttribute('aria-hidden');
@@ -457,7 +473,9 @@ export function createScrollIdentity(root) {
     }
     const targetOffset =
       id === 'skills'
-        ? identityDistance + educationDistance + skillsDistance * SKILLS_INTRO_END
+        ? identityDistance +
+          educationDistance +
+          skillsDistance * Math.min(1, SKILLS_INTRO_END + 0.02)
         : id === 'education'
           ? identityDistance + educationDistance * EDUCATION_INTRO_END
           : id === 'about'
@@ -488,7 +506,6 @@ export function createScrollIdentity(root) {
   measure();
 
   const educationSequence = createEducationSequence({
-    about,
     aboutContent,
     root,
   });
@@ -545,6 +562,17 @@ export function createScrollIdentity(root) {
       timeline.progress(identity, true);
       onProgress(identity);
     }
+
+    if (skills <= 0.0001 && education >= EDUCATION_INTRO_END) {
+      gsap.set(educationContent, {
+        clipPath: 'inset(0 0 0 0)',
+        xPercent: 0,
+      });
+    }
+    if (education <= 0.0001 && identity >= 0.999) {
+      gsap.set(aboutContent, { clipPath: 'inset(0 0 0 0)' });
+    }
+
     root.dataset.masterScrollProgress = (
       totalDistance > 0
         ? (identity * identityDistance +
@@ -553,6 +581,7 @@ export function createScrollIdentity(root) {
           totalDistance
         : 0
     ).toFixed(3);
+    syncSceneAccessibility(identity, education, skills);
     syncActiveSection(identity, education, skills);
   };
 
@@ -560,6 +589,12 @@ export function createScrollIdentity(root) {
     applyReducedComposition();
     educationSequence.applyReduced();
     skillsSequence.applyReduced();
+    about.setAttribute('aria-hidden', 'false');
+    about.inert = false;
+    educationStage.setAttribute('aria-hidden', 'false');
+    educationStage.inert = false;
+    skillsStage.setAttribute('aria-hidden', 'false');
+    skillsStage.inert = false;
     root.dataset.educationScrollDistance = '0';
     root.dataset.skillsScrollDistance = '0';
     root.dataset.masterScrollDistance = '0';

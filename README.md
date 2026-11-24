@@ -2,7 +2,7 @@
 
 Production development environment for a cinematic React portfolio built around a kinetic typographic identity.
 
-Phase 04 preserves the approved Hero, circular entrance, original-glyph A/S extraction, About reading sequence, and Education carousel, then extends the same native-scroll controller into a vertical Skills formation. The supplied technology marks form a responsive inverted pyramid with the code symbol arriving last. Sanity provides a searchable, sortable Skills Library without coupling CMS requests to animation frames. Projects and later sections are not implemented yet.
+Phase 04 preserves the approved Hero, circular entrance, original-glyph A/S extraction, About reading sequence, and Education carousel, then extends the same native-scroll controller into a vertical Skills formation. The supplied technology marks resolve from coordinated row fans into a responsive, irregular wide-to-narrow composition. Sanity provides a searchable, sortable Skills Library without coupling CMS requests to animation frames. Projects and later sections are not implemented yet.
 
 No live Sanity project is connected by default.
 
@@ -44,7 +44,7 @@ npm run skills:import -- --catalog <path-to-ICON_CATALOG.json>
 
 Copy `.env.example` to `.env.local` and `studio/.env.example` to `studio/.env.local` after creating a Sanity project. See [CMS setup and deployment](docs/CMS.md) for the security boundary, roles, preview limitations, and production checklist.
 
-The Skills import command is a read-only dry run unless `--commit` is supplied. A committed import additionally requires `SANITY_STUDIO_PROJECT_ID` and `SANITY_AUTH_TOKEN`; never put that token in a `VITE_*` variable. Only the approved public marks and permanent code symbol are bundled locally. Devicon assets retain their MIT notice at `public/skills/DEVICON_LICENSE.txt`; motion principles were studied from the supplied Skiper UI reference and reimplemented in GSAP without copying its component or layout.
+The Skills import command is a read-only dry run unless `--commit` is supplied. A committed import additionally requires `SANITY_STUDIO_PROJECT_ID` and `SANITY_AUTH_TOKEN`; never put that token in a `VITE_*` variable. Only the approved public marks are bundled locally. Any later symbol must be uploaded through Sanity and behaves like an ordinary selected skill. Devicon assets retain their MIT notice at `public/skills/DEVICON_LICENSE.txt`; motion principles were studied from the supplied Skiper UI reference and reimplemented in GSAP without copying its component or layout.
 
 ## Project guidance
 

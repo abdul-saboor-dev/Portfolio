@@ -59,6 +59,9 @@ test('moves the original unchanged A and S into a compact monogram and reverses 
   const hero = page.locator('.kinetic-hero');
   const wordmark = page.getByTestId('kinetic-wordmark');
   const destination = page.locator('.kinetic-monogram__destination');
+  const about = page.locator('.kinetic-about');
+  const education = page.locator('.education-stage');
+  const skills = page.locator('.skills-stage');
 
   expect(
     await page
@@ -118,6 +121,9 @@ test('moves the original unchanged A and S into a compact monogram and reverses 
     await expect(hero).toHaveAttribute('data-entrance-stage', 'complete');
     await expect(destination).toHaveAttribute('aria-hidden', 'true');
     await expect(wordmark).not.toHaveAttribute('aria-hidden', 'true');
+    await expect(about).toBeHidden();
+    await expect(education).toBeHidden();
+    await expect(skills).toBeHidden();
     const restored = await readIdentityGlyphs(page);
     restored.forEach((glyph) => {
       expect(glyph.opacity).toBeGreaterThan(0.99);

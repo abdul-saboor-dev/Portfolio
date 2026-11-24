@@ -6,6 +6,8 @@ import {
   APPROVED_HERO_STATEMENTS,
   APPROVED_IDENTITY_TAGLINES,
   APPROVED_SKILLS,
+  APPROVED_SKILLS_DESCRIPTION,
+  APPROVED_SKILLS_HEADING,
 } from '@portfolio/content-model';
 import { FALLBACK_CONTENT, validatePortfolioContent } from '../../src/cms/validation.js';
 
@@ -53,6 +55,29 @@ test('missing CMS content returns only approved fallback identity content', () =
   assert.equal(result.content.about.narrative, APPROVED_ABOUT_NARRATIVE);
   assert.deepEqual(result.content.education, APPROVED_EDUCATION_RECORDS);
   assert.deepEqual(result.content.skills, APPROVED_SKILLS);
+  assert.deepEqual(result.content.skillsPresentation, {
+    heading: APPROVED_SKILLS_HEADING,
+    description: APPROVED_SKILLS_DESCRIPTION,
+  });
+});
+
+test('Skills presentation copy validates independently and falls back safely', () => {
+  const valid = validatePortfolioContent({
+    skillsPresentation: {
+      heading: 'Tools in motion.',
+      description: 'A concise, editor-controlled introduction.',
+    },
+  });
+  assert.deepEqual(valid.content.skillsPresentation, {
+    heading: 'Tools in motion.',
+    description: 'A concise, editor-controlled introduction.',
+  });
+
+  const invalid = validatePortfolioContent({
+    skillsPresentation: { heading: '', description: 'x'.repeat(181) },
+  });
+  assert.equal(invalid.issues.at(-1).path, 'skillsPresentation');
+  assert.equal(invalid.content.skillsPresentation, FALLBACK_CONTENT.skillsPresentation);
 });
 
 test('Skills records are visible-only and sorted by editor order', () => {

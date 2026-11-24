@@ -74,6 +74,7 @@ test('hands About into Education without replacing the completed AS identity', a
   await setEducationProgress(page, 0);
   await expect(page.locator('.kinetic-about')).toHaveAttribute('aria-hidden', 'false');
   await expect(page.locator('.education-stage')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.education-stage')).toBeHidden();
   await expect(
     page
       .getByRole('navigation', { name: 'Portfolio sections' })
