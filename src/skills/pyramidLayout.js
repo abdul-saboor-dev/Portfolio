@@ -36,13 +36,39 @@ const irregularRowPattern = Object.freeze([
   Object.freeze({ x: -0.44, y: 0.16 }),
 ]);
 
+const constellationVerticalPattern = Object.freeze([
+  -0.22, 0.13, -0.06, 0.24, -0.16, 0.04,
+]);
+
+const constellationHorizontalPattern = Object.freeze([
+  0.03, -0.06, 0.04, -0.03, 0.07, -0.04,
+]);
+
 export function getIrregularRowPlacement(rowIndex, rowWidth, widestRow) {
   const pattern = irregularRowPattern[rowIndex % irregularRowPattern.length];
   const widthRatio = Math.min(1, Math.max(0, rowWidth / Math.max(widestRow, 1)));
   const taper = 0.78 + widthRatio * 0.22;
   return {
     x: Number((pattern.x * taper).toFixed(4)),
-    y: Number((pattern.y * taper).toFixed(4)),
+    y: 0,
+  };
+}
+
+export function getConstellationItemPlacement({
+  columnIndex,
+  itemIndex,
+  rowIndex,
+  rowWidth,
+}) {
+  const widthTaper = rowWidth > 1 ? 1 : 0.45;
+  const verticalIndex =
+    (columnIndex + rowIndex * 2) % constellationVerticalPattern.length;
+  const horizontalIndex =
+    (itemIndex * 2 + rowIndex + columnIndex) % constellationHorizontalPattern.length;
+
+  return {
+    x: Number((constellationHorizontalPattern[horizontalIndex] * widthTaper).toFixed(4)),
+    y: Number((constellationVerticalPattern[verticalIndex] * widthTaper).toFixed(4)),
   };
 }
 
@@ -58,12 +84,21 @@ export function buildPyramidRows(skills) {
   let cursor = 0;
 
   return widths.map((width, rowIndex) => {
-    const row = ordered.slice(cursor, cursor + width).map((item, columnIndex) => ({
-      ...item,
-      columnIndex,
-      itemIndex: cursor + columnIndex,
-      rowIndex,
-    }));
+    const row = ordered.slice(cursor, cursor + width).map((item, columnIndex) => {
+      const itemIndex = cursor + columnIndex;
+      return {
+        ...item,
+        columnIndex,
+        constellation: getConstellationItemPlacement({
+          columnIndex,
+          itemIndex,
+          rowIndex,
+          rowWidth: width,
+        }),
+        itemIndex,
+        rowIndex,
+      };
+    });
     cursor += width;
     return row;
   });

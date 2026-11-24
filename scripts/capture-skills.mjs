@@ -2,9 +2,10 @@ import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 
 const baseUrl = process.env.PORTFOLIO_PREVIEW_URL ?? 'http://127.0.0.1:4173';
-const outputDirectory = 'test-results/skills-phase-041';
+const outputDirectory = 'test-results/skills-phase-042';
 const formats = [
   { name: 'desktop', record: true, viewport: { width: 1440, height: 900 } },
+  { name: 'desktop-short', record: false, viewport: { width: 1366, height: 768 } },
   { name: 'laptop', record: false, viewport: { width: 1280, height: 800 } },
   { name: 'tablet', record: false, viewport: { width: 768, height: 1024 } },
   { name: 'mobile', record: true, viewport: { width: 390, height: 844 } },

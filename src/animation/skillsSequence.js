@@ -13,6 +13,16 @@ const visibleViewportHeight = () =>
   window.visualViewport?.height ??
   window.innerHeight;
 
+const getRectUnion = (rects) => ({
+  bottom: Math.max(...rects.map((rect) => rect.bottom)),
+  left: Math.min(...rects.map((rect) => rect.left)),
+  right: Math.max(...rects.map((rect) => rect.right)),
+  top: Math.min(...rects.map((rect) => rect.top)),
+});
+
+const getStableCorrection = (minimum, maximum) =>
+  minimum <= maximum ? clamp(minimum, maximum, 0) : 0;
+
 export const getSkillsScrollDistance = (skillCount) => {
   if (skillCount < 1) return 0;
   const compact = window.matchMedia('(max-width: 600px)').matches;
@@ -89,10 +99,12 @@ export function createSkillsSequence({ educationStage, root }) {
     });
     gsap.set(content, { clearProps: 'clipPath' });
 
+    formation.style.removeProperty('--skills-icon-size');
+    formation.style.setProperty('--skills-formation-x', '0px');
+    formation.style.setProperty('--skills-formation-y', '0px');
+
     const stageRect = stage.getBoundingClientRect();
-    const formationRect = formation.getBoundingClientRect();
     const copyRect = copy.getBoundingClientRect();
-    const itemRects = items.map((item) => item.getBoundingClientRect());
     const rows = [...stage.querySelectorAll('.skills-stage__row')];
     const rowCount = Math.max(1, rows.length);
     const compact = window.matchMedia('(max-width: 600px)').matches;
@@ -100,9 +112,68 @@ export function createSkillsSequence({ educationStage, root }) {
       '(max-height: 540px) and (orientation: landscape)',
     ).matches;
     const stacked = window.matchMedia('(max-width: 960px)').matches && !landscape;
+    const safeEdge = compact ? 4 : 12;
+    const safeBottom = compact
+      ? window.innerHeight <= 600
+        ? 12
+        : 20
+      : landscape
+        ? 12
+        : 40;
+    let formationRect = formation.getBoundingClientRect();
+    let itemRects = items.map((item) => item.getBoundingClientRect());
+    const getSafeBounds = () => ({
+      bottom: Math.min(formationRect.bottom - 2, stageRect.bottom - safeBottom),
+      left: stacked
+        ? Math.max(stageRect.left, formationRect.left) + safeEdge
+        : Math.max(
+            stageRect.left + safeEdge,
+            formationRect.left + 4,
+            copyRect.right + 24,
+          ),
+      right: Math.min(stageRect.right - safeEdge, formationRect.right - 4),
+      top: Math.max(stageRect.top + safeEdge, formationRect.top + 2),
+    });
+
+    for (let pass = 0; pass < 3 && itemRects.length > 0; pass += 1) {
+      const bounds = getRectUnion(itemRects);
+      const safe = getSafeBounds();
+      const widthScale = (safe.right - safe.left) / (bounds.right - bounds.left);
+      const heightScale = (safe.bottom - safe.top) / (bounds.bottom - bounds.top);
+      const fitScale = Math.min(1, widthScale, heightScale);
+      if (fitScale >= 0.995) break;
+
+      const currentSize = itemRects[0].width;
+      formation.style.setProperty(
+        '--skills-icon-size',
+        `${Math.max(1, currentSize * fitScale * 0.985).toFixed(3)}px`,
+      );
+      formationRect = formation.getBoundingClientRect();
+      itemRects = items.map((item) => item.getBoundingClientRect());
+    }
+
+    if (itemRects.length > 0) {
+      const bounds = getRectUnion(itemRects);
+      const safe = getSafeBounds();
+      const correctionX = getStableCorrection(
+        safe.left - bounds.left,
+        safe.right - bounds.right,
+      );
+      const correctionY = getStableCorrection(
+        safe.top - bounds.top,
+        safe.bottom - bounds.bottom,
+      );
+      formation.style.setProperty('--skills-formation-x', `${correctionX.toFixed(3)}px`);
+      formation.style.setProperty('--skills-formation-y', `${correctionY.toFixed(3)}px`);
+      formation.dataset.correctionX = correctionX.toFixed(3);
+      formation.dataset.correctionY = correctionY.toFixed(3);
+      formation.dataset.runtimeIconSize = itemRects[0].width.toFixed(3);
+      formationRect = formation.getBoundingClientRect();
+      itemRects = items.map((item) => item.getBoundingClientRect());
+    }
+
     const desiredFanSpread = 1.125;
     const rectByItem = new Map(items.map((item, index) => [item, itemRects[index]]));
-    const safeEdge = compact ? 4 : 12;
     const safeLeft = stacked
       ? Math.max(stageRect.left, formationRect.left) + safeEdge
       : Math.max(stageRect.left + safeEdge, copyRect.right + 24);
@@ -273,6 +344,12 @@ export function createSkillsSequence({ educationStage, root }) {
       });
       stage.setAttribute('aria-hidden', 'true');
       stage.inert = true;
+      formation.style.removeProperty('--skills-icon-size');
+      formation.style.removeProperty('--skills-formation-x');
+      formation.style.removeProperty('--skills-formation-y');
+      delete formation.dataset.correctionX;
+      delete formation.dataset.correctionY;
+      delete formation.dataset.runtimeIconSize;
       delete root.dataset.skillsProgress;
       delete root.dataset.skillsState;
     },

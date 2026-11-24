@@ -20,6 +20,10 @@ function SkillIcon({ skill, index }) {
       data-skill-id={skill._id}
       data-skill-row={skill.rowIndex}
       data-skill-column={skill.columnIndex}
+      style={{
+        '--skills-item-x': `calc(${skill.constellation.x} * var(--skills-icon-size))`,
+        '--skills-item-y': `calc(${skill.constellation.y} * var(--skills-icon-size))`,
+      }}
     >
       <img
         className="skills-stage__icon"
@@ -57,7 +61,13 @@ function SkillsSection({ presentation, skills }) {
       data-skills-state="pending"
       inert
     >
-      <div className="skills-stage__content" style={{ '--skills-max-row': maxRow }}>
+      <div
+        className="skills-stage__content"
+        style={{
+          '--skills-max-row': maxRow,
+          '--skills-row-count': rows.length,
+        }}
+      >
         <header className="skills-stage__header">
           <h2 id="skills-heading">Skills</h2>
         </header>

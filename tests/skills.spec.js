@@ -374,6 +374,7 @@ test('keeps the completed irregular formation readable and overflow-free across 
   test.setTimeout(90_000);
   for (const viewport of [
     { width: 1440, height: 900 },
+    { width: 1366, height: 768 },
     { width: 1280, height: 800 },
     { width: 768, height: 1024 },
     { width: 390, height: 844 },
@@ -400,6 +401,30 @@ test('keeps the completed irregular formation readable and overflow-free across 
     ).toBe(true);
     await expect(page.locator('[data-skill-index]')).toHaveCount(17);
     await expect(page.locator('[data-skills-code]')).toHaveCount(0);
+    const geometry = await readSkillGeometry(page);
+    expect(countVisibleCollisions(geometry)).toBe(0);
+    expect(await countTextIntersections(page)).toBe(0);
+    for (const icon of geometry) {
+      expect(icon.left).toBeGreaterThanOrEqual(-1);
+      expect(icon.right).toBeLessThanOrEqual(viewport.width + 1);
+      expect(icon.top).toBeGreaterThanOrEqual(-1);
+      expect(icon.bottom).toBeLessThanOrEqual(viewport.height + 1);
+    }
+
+    const rows = Object.groupBy(geometry, ({ row }) => row);
+    for (const row of Object.values(rows)) {
+      if (row.length < 2) continue;
+      const verticalSpread =
+        Math.max(...row.map(({ centerY }) => centerY)) -
+        Math.min(...row.map(({ centerY }) => centerY));
+      expect(verticalSpread).toBeGreaterThanOrEqual(4.5);
+    }
+
+    if (viewport.width > 960 && viewport.height > 600) {
+      const bottomClearance =
+        viewport.height - Math.max(...geometry.map(({ bottom }) => bottom));
+      expect(bottomClearance).toBeGreaterThanOrEqual(32);
+    }
     const firstIcon = await page
       .locator('.skills-stage__icon')
       .first()
@@ -407,7 +432,14 @@ test('keeps the completed irregular formation readable and overflow-free across 
         const rect = icon.getBoundingClientRect();
         return Math.min(rect.width, rect.height);
       });
-    const minimumIconSize = viewport.height <= 540 ? 34 : viewport.width <= 390 ? 35 : 58;
+    const minimumIconSize =
+      viewport.height <= 540
+        ? 30
+        : viewport.width <= 320
+          ? 31.5
+          : viewport.width <= 390
+            ? 35
+            : 58;
     expect(firstIcon).toBeGreaterThanOrEqual(minimumIconSize);
   }
 });

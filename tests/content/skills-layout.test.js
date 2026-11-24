@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildPyramidRows,
+  getConstellationItemPlacement,
   getIrregularRowPlacement,
   getPyramidRowWidths,
 } from '../../src/skills/pyramidLayout.js';
@@ -40,6 +41,39 @@ test('derives stable, bounded irregular row placements without randomness', () =
   assert.ok(first.every(({ y }) => Math.abs(y) <= 0.22));
 });
 
+test('derives stable per-icon constellation offsets with varied baselines', () => {
+  const rows = [5, 4, 3, 3, 2];
+  let itemIndex = 0;
+  const first = rows.map((rowWidth, rowIndex) =>
+    Array.from({ length: rowWidth }, (_, columnIndex) =>
+      getConstellationItemPlacement({
+        columnIndex,
+        itemIndex: itemIndex++,
+        rowIndex,
+        rowWidth,
+      }),
+    ),
+  );
+  itemIndex = 0;
+  const second = rows.map((rowWidth, rowIndex) =>
+    Array.from({ length: rowWidth }, (_, columnIndex) =>
+      getConstellationItemPlacement({
+        columnIndex,
+        itemIndex: itemIndex++,
+        rowIndex,
+        rowWidth,
+      }),
+    ),
+  );
+
+  assert.deepEqual(first, second);
+  assert.ok(first.flat().every(({ x }) => Math.abs(x) <= 0.07));
+  assert.ok(first.flat().every(({ y }) => Math.abs(y) <= 0.24));
+  assert.ok(
+    first.every((row) => row.length < 2 || new Set(row.map(({ y }) => y)).size > 1),
+  );
+});
+
 test('preserves editor order and omits hidden records', () => {
   const rows = buildPyramidRows([
     { _id: 'third', name: 'Third', order: 3, visible: true },
@@ -55,4 +89,5 @@ test('preserves editor order and omits hidden records', () => {
     rows.flat().map(({ itemIndex }) => itemIndex),
     [0, 1, 2],
   );
+  assert.ok(rows.flat().every(({ constellation }) => constellation));
 });
