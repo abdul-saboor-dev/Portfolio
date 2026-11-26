@@ -10,6 +10,7 @@ import {
   APPROVED_SKILLS_HEADING,
 } from '@portfolio/content-model';
 import { FALLBACK_CONTENT, validatePortfolioContent } from '../../src/cms/validation.js';
+import { PROJECTS_FALLBACK } from '../../src/projects/content.js';
 
 test('invalid profile content falls back without discarding valid independent sections', () => {
   const result = validatePortfolioContent({
@@ -38,7 +39,7 @@ test('invalid profile content falls back without discarding valid independent se
   assert.equal(result.issues[0].path, 'profile');
 });
 
-test('missing CMS content returns only approved fallback identity content', () => {
+test('missing CMS content returns approved identity and supplied project fallbacks', () => {
   const result = validatePortfolioContent(null);
 
   assert.equal(result.content.profile.fullName, 'ABDUL SABOOR');
@@ -51,7 +52,7 @@ test('missing CMS content returns only approved fallback identity content', () =
     result.content.profile.taglines.map(({ text }) => text),
     APPROVED_IDENTITY_TAGLINES,
   );
-  assert.deepEqual(result.content.projects, []);
+  assert.deepEqual(result.content.projects, PROJECTS_FALLBACK);
   assert.equal(result.content.about.narrative, APPROVED_ABOUT_NARRATIVE);
   assert.deepEqual(result.content.education, APPROVED_EDUCATION_RECORDS);
   assert.deepEqual(result.content.skills, APPROVED_SKILLS);
@@ -118,12 +119,17 @@ test('published CV metadata is validated without requiring a privileged token', 
         url: 'https://cdn.sanity.io/files/project/dataset/abdul-saboor-cv.pdf',
         title: 'Abdul Saboor | Curriculum Vitae',
         filename: 'abdul-saboor-cv.pdf',
+        previewImageUrl: 'https://cdn.sanity.io/images/project/dataset/cv.png',
+        downloadAvailable: false,
+        lastUpdated: '2026-11-25',
       },
     },
   });
 
   assert.equal(result.issues.length, 0);
   assert.equal(result.content.profile.cv.filename, 'abdul-saboor-cv.pdf');
+  assert.equal(result.content.profile.cv.downloadAvailable, false);
+  assert.equal(result.content.profile.cv.lastUpdated, '2026-11-25');
   assert.deepEqual(result.content.profile.heroStatements, APPROVED_HERO_STATEMENTS);
 });
 

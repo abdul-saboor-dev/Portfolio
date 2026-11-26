@@ -9,12 +9,16 @@ import HeroNavigation from './HeroNavigation.jsx';
 import HeroScrollCue from './HeroScrollCue.jsx';
 import KineticWordmark from './KineticWordmark.jsx';
 import SkillsSection from './SkillsSection.jsx';
+import ProjectsSection from './ProjectsSection.jsx';
 
 function KineticHero({
   about,
   education,
   skills,
   skillsPresentation,
+  projects,
+  creativeWork,
+  projectsCopy,
   profile,
   contentStatus,
 }) {
@@ -57,6 +61,7 @@ function KineticHero({
             <HeroActions
               cvActionLabel={profile.cvActionLabel}
               cvDocument={profile.cv}
+              cvVisible={profile.cvVisible}
               projectsAction={profile.projectsAction}
             />
             <HeroScrollCue />
@@ -67,6 +72,11 @@ function KineticHero({
       <AboutSection narrative={about.narrative} />
       <EducationSection records={education} />
       <SkillsSection presentation={skillsPresentation} skills={skills} />
+      <ProjectsSection
+        projects={projects}
+        creativeWork={creativeWork}
+        copy={projectsCopy}
+      />
     </header>
   );
 }

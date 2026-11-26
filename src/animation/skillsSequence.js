@@ -267,7 +267,8 @@ export function createSkillsSequence({ educationStage, root }) {
       const enterStart = SKILLS_FORMATION_START + rowRatio * 0.1;
       const settleEnd = 0.75 + rowRatio * 0.045;
       const fanX = signedDistance * rect.width * fanRow.spread + fanRow.shift;
-      const fanY = -Math.abs(signedDistance) * rect.height * fanLift;
+      const fanY =
+        -Math.abs(signedDistance) * rect.height * fanLift + row * rect.height * 0.22;
       const fanScale = 0.75;
 
       item.dataset.fanStart = enterStart.toFixed(3);

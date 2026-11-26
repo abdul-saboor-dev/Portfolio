@@ -3,6 +3,8 @@ import { contact } from './documents/contact.js';
 import { education } from './documents/education.js';
 import { profile } from './documents/profile.js';
 import { project } from './documents/project.js';
+import { creativeWork } from './documents/creativeWork.js';
+import { projectsSettings } from './documents/projectsSettings.js';
 import { siteSettings } from './documents/siteSettings.js';
 import { skill } from './documents/skill.js';
 import { skillCategory } from './documents/skillCategory.js';
@@ -28,6 +30,8 @@ export const schemaTypes = [
   skillsPresentation,
   skill,
   project,
+  creativeWork,
+  projectsSettings,
   contact,
   siteSettings,
 ];

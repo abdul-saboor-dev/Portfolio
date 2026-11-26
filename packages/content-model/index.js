@@ -55,6 +55,7 @@ export const APPROVED_SKILLS = Object.freeze([
   skill('canva', 'Canva', 'Design', 'graphics', 14),
   skill('vscode', 'VS Code', 'Tools', 'visual studio code editor', 15),
   skill('cpp', 'C++', 'Languages', 'cplusplus cpp', 16),
+  skill('adobe-illustrator', 'Adobe Illustrator', 'Design', 'illustrator ai', 17),
 ]);
 
 export const APPROVED_HERO_STATEMENTS = Object.freeze([

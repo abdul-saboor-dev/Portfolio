@@ -6,12 +6,16 @@ export const PORTFOLIO_CONTENT_QUERY = `{
     heroIntroduction,
     projectsAction{label, destinationType, destinationValue},
     cvActionLabel,
+    cvVisible,
     "taglines": taglines[]{text},
     portrait,
     "cv": select(defined(cvFile.asset) => {
       "url": cvFile.asset->url,
       "filename": cvFile.asset->originalFilename,
-      "title": coalesce(cvTitle, "Abdul Saboor | Curriculum Vitae")
+      "title": coalesce(cvTitle, "Abdul Saboor | Curriculum Vitae"),
+      "previewImageUrl": cvPreviewImage.asset->url,
+      "downloadAvailable": coalesce(cvDownloadAvailable, true),
+      "lastUpdated": cvLastUpdated
     })
   },
   "about": *[_type == "about" && _id == "about"][0]{
@@ -72,7 +76,27 @@ export const PORTFOLIO_CONTENT_QUERY = `{
     liveUrl,
     media,
     caseStudy,
-    seo
+    seo,
+    category,
+    extendedDescription,
+    projectRole,
+    status,
+    "desktopPreviewUrl": desktopPreview.asset->url,
+    "imageAlt": desktopPreview.alt,
+    showGithub,
+    showLive,
+    visible
+  },
+  "creativeWork": *[_type == "creativeWork" && visible == true] | order(order asc, _createdAt asc){
+    _id, title, "slug": slug.current, category, description, extendedDescription,
+    order, visible, featured, alt, externalUrl, tools, series, video,
+    additionalArtworks,
+    "artworkUrl": artwork.asset->url,
+    "fullSizeUrl": fullSize.asset->url
+  },
+  "projectsCopy": *[_type == "projectsSettings" && _id == "projectsSettings"][0]{
+    buildDescription, designDescription,
+    creativeIntroduction, closingTitle, closingDescription
   },
   "contact": *[_type == "contact" && _id == "contact"][0]{
     email,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import CvViewer from './CvViewer.jsx';
 
 function ActionContent({ children }) {
@@ -20,7 +20,22 @@ function UnavailableAction({ children }) {
   );
 }
 
-function HeroActions({ cvActionLabel, cvDocument, projectsAction }) {
+const DEMO_CV = Object.freeze({
+  url: '/demo-cv.pdf',
+  filename: 'abdul-saboor-cv.pdf',
+  title: 'CV',
+  previewImageUrl: '/demo-cv-preview.png',
+  downloadAvailable: true,
+  demo: true,
+});
+const subscribe = () => () => {};
+
+function HeroActions({ cvActionLabel, cvDocument, cvVisible = true, projectsAction }) {
+  const mounted = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
   const [hasInternalDestination, setHasInternalDestination] = useState(false);
   const isInternal = projectsAction.destinationType === 'internal';
   const internalId = isInternal ? projectsAction.destinationValue : null;
@@ -51,6 +66,18 @@ function HeroActions({ cvActionLabel, cvDocument, projectsAction }) {
         <a
           className="kinetic-hero__action"
           href={projectsHref}
+          onClick={
+            isInternal
+              ? (event) => {
+                  event.preventDefault();
+                  window.dispatchEvent(
+                    new CustomEvent('kinetic:navigate-section', {
+                      detail: { id: internalId },
+                    }),
+                  );
+                }
+              : undefined
+          }
           {...(!isInternal ? { rel: 'noreferrer', target: '_blank' } : {})}
         >
           <ActionContent>{projectsAction.label}</ActionContent>
@@ -59,8 +86,8 @@ function HeroActions({ cvActionLabel, cvDocument, projectsAction }) {
         <UnavailableAction>{projectsAction.label}</UnavailableAction>
       )}
 
-      {cvDocument ? (
-        <CvViewer document={cvDocument} label={cvActionLabel} />
+      {cvVisible && mounted ? (
+        <CvViewer document={cvDocument || DEMO_CV} label={cvActionLabel} />
       ) : (
         <UnavailableAction>{cvActionLabel}</UnavailableAction>
       )}

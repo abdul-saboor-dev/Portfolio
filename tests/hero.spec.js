@@ -353,7 +353,7 @@ test('reveals the editorial composition inside the existing glyph-settle phrase'
   });
 });
 
-test('renders the six-section navigation without activating unfinished destinations', async ({
+test('renders the six-section navigation with only real destinations active', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -384,22 +384,26 @@ test('renders the six-section navigation without activating unfinished destinati
     'href',
     '#skills',
   );
-  for (const label of ['Projects', 'Contact']) {
+  await expect(navigation.getByRole('link', { name: /Projects/ })).toHaveAttribute(
+    'href',
+    '#projects',
+  );
+  for (const label of ['Contact']) {
     await expect(
       navigation.locator('.hero-navigation__item').filter({ hasText: label }),
     ).toHaveAttribute('aria-disabled', 'true');
   }
-  await expect(navigation.locator('a')).toHaveCount(4);
+  await expect(navigation.locator('a')).toHaveCount(5);
   const actions = page.getByLabel('Hero actions');
   await expect(actions).toBeVisible();
   await expect(actions.locator('.kinetic-hero__action')).toHaveCount(2);
   await expect(
     actions.locator('.kinetic-hero__action').filter({ hasText: 'Explore Projects' }),
-  ).toHaveAttribute('aria-disabled', 'true');
+  ).toHaveAttribute('href', '#projects');
   await expect(
     actions.locator('.kinetic-hero__action').filter({ hasText: 'View CV' }),
-  ).toHaveAttribute('aria-disabled', 'true');
-  await expect(page.locator('.cv-viewer')).toHaveCount(0);
+  ).toBeEnabled();
+  await expect(page.locator('.cv-viewer')).toHaveCount(1);
   const scrollCue = page.locator('.kinetic-hero__scroll-cue');
   await page.waitForFunction(
     () => document.querySelector('.kinetic-hero')?.dataset.scrollIdentity === 'ready',
@@ -408,11 +412,6 @@ test('renders the six-section navigation without activating unfinished destinati
   await expect(scrollCue).toHaveAttribute('href', '#about');
   await expect(scrollCue).not.toHaveAttribute('tabindex', '-1');
 
-  await page.evaluate(() => {
-    const projects = document.createElement('section');
-    projects.id = 'projects';
-    document.querySelector('main').append(projects);
-  });
   await expect(actions.getByRole('link', { name: /Explore Projects/i })).toHaveAttribute(
     'href',
     '#projects',
@@ -673,7 +672,7 @@ test('opens an accessible mobile editorial menu without replaying the entrance',
     'href',
     '#home',
   );
-  await expect(dialog.locator('a')).toHaveCount(4);
+  await expect(dialog.locator('a')).toHaveCount(5);
   await expect(dialog.getByRole('link', { name: /About/ })).toHaveAttribute(
     'href',
     '#about',
@@ -686,7 +685,11 @@ test('opens an accessible mobile editorial menu without replaying the entrance',
     'href',
     '#skills',
   );
-  for (const label of ['Projects', 'Contact']) {
+  await expect(dialog.getByRole('link', { name: /Projects/ })).toHaveAttribute(
+    'href',
+    '#projects',
+  );
+  for (const label of ['Contact']) {
     await expect(
       dialog.locator('.hero-navigation__item').filter({ hasText: label }),
     ).toHaveAttribute('aria-disabled', 'true');
@@ -810,6 +813,7 @@ test('the configured CV viewer traps the document in-page and restores focus', a
     const { default: CvViewer } = await import('/src/components/CvViewer.jsx');
     const spacer = document.createElement('div');
     const mount = document.createElement('div');
+    mount.id = 'configured-cv-test';
     spacer.style.height = '20rem';
     document.body.append(spacer, mount);
     window.scrollTo(0, 120);
@@ -825,7 +829,9 @@ test('the configured CV viewer traps the document in-page and restores focus', a
     );
   });
 
-  const trigger = page.getByRole('button', { name: 'View CV' });
+  const trigger = page
+    .locator('#configured-cv-test')
+    .getByRole('button', { name: 'View CV' });
   await expect(trigger).toBeVisible();
   await trigger.evaluate((element) => element.click());
 
@@ -834,10 +840,7 @@ test('the configured CV viewer traps the document in-page and restores focus', a
   await expect(dialog.getByRole('heading', { level: 2 })).toHaveText(
     'Abdul Saboor | Curriculum Vitae',
   );
-  await expect(dialog.locator('object[type="application/pdf"]')).toHaveAttribute(
-    'data',
-    /^data:application\/pdf/,
-  );
+  await expect(dialog.locator('iframe')).toHaveAttribute('src', /^data:application\/pdf/);
   await expect(dialog.getByRole('link', { name: /Download PDF/ })).toHaveAttribute(
     'download',
     'abdul-saboor-cv.pdf',

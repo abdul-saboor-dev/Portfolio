@@ -5,6 +5,7 @@ import {
   EDUCATION_INTRO_END,
 } from './educationSequence.js';
 import { gsap, ScrollTrigger } from './gsap.js';
+import { createProjectsSequence } from './projectsSequence.js';
 import {
   createSkillsSequence,
   SKILLS_ACTIVE_THRESHOLD,
@@ -132,6 +133,7 @@ export function createScrollIdentity(root) {
   const educationStage = root.querySelector('.education-stage');
   const educationContent = educationStage?.querySelector('.education-stage__content');
   const skillsStage = root.querySelector('.skills-stage');
+  const projectsStage = root.querySelector('.projects');
 
   if (
     !aGlyph ||
@@ -145,6 +147,7 @@ export function createScrollIdentity(root) {
     !educationStage ||
     !educationContent ||
     !skillsStage ||
+    !projectsStage ||
     glyphs.length !== 11
   ) {
     root.dataset.scrollIdentity = 'unavailable';
@@ -165,7 +168,7 @@ export function createScrollIdentity(root) {
   let aboutWords = [...about.querySelectorAll(ABOUT_WORD_SELECTOR)];
   let finalAccessibleState = false;
   let activeSection = null;
-  let refreshState = { education: 0, identity: 0, skills: 0 };
+  let refreshState = { education: 0, identity: 0, skills: 0, projects: 0 };
   let resizeFrame = 0;
   let resizeState = null;
   let contentFrame = 0;
@@ -175,6 +178,7 @@ export function createScrollIdentity(root) {
   let identityDistance = getIdentityScrollDistance();
   let educationDistance = 0;
   let skillsDistance = 0;
+  let projectsDistance = 0;
   let totalDistance = identityDistance;
 
   configureCue(cue);
@@ -253,9 +257,12 @@ export function createScrollIdentity(root) {
     identityProgress,
     educationProgress = 0,
     skillsProgress = 0,
+    projectsProgress = 0,
   ) => {
-    const skillsAccessible = skillsProgress > 0.12;
-    const educationAccessible = educationProgress > 0.03 && !skillsAccessible;
+    const projectsAccessible = projectsProgress > 0.001;
+    const skillsAccessible = skillsProgress > 0.12 && !projectsAccessible;
+    const educationAccessible =
+      educationProgress > 0.03 && !skillsAccessible && !projectsAccessible;
     const aboutAccessible =
       identityProgress >= ABOUT_REVEAL_START &&
       !educationAccessible &&
@@ -267,21 +274,26 @@ export function createScrollIdentity(root) {
     educationStage.inert = !educationAccessible;
     skillsStage.setAttribute('aria-hidden', String(!skillsAccessible));
     skillsStage.inert = !skillsAccessible;
+    projectsStage.setAttribute('aria-hidden', String(!projectsAccessible));
+    projectsStage.inert = !projectsAccessible;
   };
 
   const syncActiveSection = (
     identityProgress,
     educationProgress = 0,
     skillsProgress = 0,
+    projectsProgress = 0,
   ) => {
     const nextSection =
-      skillsProgress >= SKILLS_ACTIVE_THRESHOLD
-        ? 'skills'
-        : educationProgress >= EDUCATION_ACTIVE_THRESHOLD
-          ? 'education'
-          : identityProgress >= ACTIVE_ABOUT_THRESHOLD
-            ? 'about'
-            : 'home';
+      projectsProgress > 0.001
+        ? 'projects'
+        : skillsProgress >= SKILLS_ACTIVE_THRESHOLD
+          ? 'skills'
+          : educationProgress >= EDUCATION_ACTIVE_THRESHOLD
+            ? 'education'
+            : identityProgress >= ACTIVE_ABOUT_THRESHOLD
+              ? 'about'
+              : 'home';
     if (nextSection === activeSection) return;
     activeSection = nextSection;
     window.dispatchEvent(
@@ -472,15 +484,21 @@ export function createScrollIdentity(root) {
       return;
     }
     const targetOffset =
-      id === 'skills'
+      id === 'projects'
         ? identityDistance +
           educationDistance +
-          skillsDistance * Math.min(1, SKILLS_INTRO_END + 0.02)
-        : id === 'education'
-          ? identityDistance + educationDistance * EDUCATION_INTRO_END
-          : id === 'about'
-            ? identityDistance * IDENTITY_HANDOFF
-            : 0;
+          skillsDistance +
+          projectsDistance *
+            (projectsSequence.getAnchor('build') / projectsSequence.total)
+        : id === 'skills'
+          ? identityDistance +
+            educationDistance +
+            skillsDistance * Math.min(1, SKILLS_INTRO_END + 0.02)
+          : id === 'education'
+            ? identityDistance + educationDistance * EDUCATION_INTRO_END
+            : id === 'about'
+              ? identityDistance * IDENTITY_HANDOFF
+              : 0;
     window.scrollTo({
       top: trigger.start + targetOffset,
       behavior: 'smooth',
@@ -492,7 +510,8 @@ export function createScrollIdentity(root) {
       event.detail?.id === 'home' ||
       event.detail?.id === 'about' ||
       event.detail?.id === 'education' ||
-      event.detail?.id === 'skills'
+      event.detail?.id === 'skills' ||
+      event.detail?.id === 'projects'
     ) {
       navigateToSection(event.detail.id);
     }
@@ -513,15 +532,30 @@ export function createScrollIdentity(root) {
     educationStage,
     root,
   });
+  const projectsSequence = createProjectsSequence(root);
+  const onProjectsNavigation = (event) => {
+    if (!trigger) return;
+    const target =
+      trigger.start +
+      identityDistance +
+      educationDistance +
+      skillsDistance +
+      projectsDistance *
+        (projectsSequence.getAnchor(event.detail?.destination) / projectsSequence.total);
+    window.scrollTo({ top: target, behavior: 'smooth' });
+  };
 
   const measureScrollDistances = () => {
     identityDistance = getIdentityScrollDistance();
     educationDistance = educationSequence.getScrollDistance();
     skillsDistance = skillsSequence.getScrollDistance();
-    totalDistance = identityDistance + educationDistance + skillsDistance;
+    projectsDistance = projectsSequence.getDistance();
+    totalDistance =
+      identityDistance + educationDistance + skillsDistance + projectsDistance;
     root.dataset.scrollDistance = Math.round(identityDistance).toString();
     root.dataset.educationScrollDistance = Math.round(educationDistance).toString();
     root.dataset.skillsScrollDistance = Math.round(skillsDistance).toString();
+    root.dataset.projectsScrollDistance = Math.round(projectsDistance).toString();
     root.dataset.masterScrollDistance = Math.round(totalDistance).toString();
   };
 
@@ -542,21 +576,39 @@ export function createScrollIdentity(root) {
               (offset - identityDistance - educationDistance) / skillsDistance,
             )
           : 0,
+      projects:
+        projectsDistance > 0
+          ? gsap.utils.clamp(
+              0,
+              1,
+              (offset - identityDistance - educationDistance - skillsDistance) /
+                projectsDistance,
+            )
+          : 0,
     };
   };
 
-  const applyScrollState = ({ education, identity, skills }) => {
-    if (skills > 0.0001) {
+  const applyScrollState = ({ education, identity, skills, projects = 0 }) => {
+    if (projects > 0.0001) {
+      timeline.progress(identity, true);
+      onProgress(identity);
+      educationSequence.setProgress(education);
+      skillsSequence.setProgress(skills);
+      projectsSequence.setProgress(projects);
+    } else if (skills > 0.0001) {
+      projectsSequence.resetBoundary();
       timeline.progress(identity, true);
       onProgress(identity);
       educationSequence.setProgress(education);
       skillsSequence.setProgress(skills);
     } else if (education > 0.0001) {
+      projectsSequence.resetBoundary();
       skillsSequence.resetBoundary();
       timeline.progress(identity, true);
       onProgress(identity);
       educationSequence.setProgress(education);
     } else {
+      projectsSequence.resetBoundary();
       skillsSequence.resetBoundary();
       educationSequence.resetBoundary();
       timeline.progress(identity, true);
@@ -577,26 +629,31 @@ export function createScrollIdentity(root) {
       totalDistance > 0
         ? (identity * identityDistance +
             education * educationDistance +
-            skills * skillsDistance) /
+            skills * skillsDistance +
+            projects * projectsDistance) /
           totalDistance
         : 0
     ).toFixed(3);
-    syncSceneAccessibility(identity, education, skills);
-    syncActiveSection(identity, education, skills);
+    syncSceneAccessibility(identity, education, skills, projects);
+    syncActiveSection(identity, education, skills, projects);
   };
 
   if (reducedMotion) {
     applyReducedComposition();
     educationSequence.applyReduced();
     skillsSequence.applyReduced();
+    projectsSequence.applyReduced();
     about.setAttribute('aria-hidden', 'false');
     about.inert = false;
     educationStage.setAttribute('aria-hidden', 'false');
     educationStage.inert = false;
     skillsStage.setAttribute('aria-hidden', 'false');
     skillsStage.inert = false;
+    projectsStage.setAttribute('aria-hidden', 'false');
+    projectsStage.inert = false;
     root.dataset.educationScrollDistance = '0';
     root.dataset.skillsScrollDistance = '0';
+    root.dataset.projectsScrollDistance = '0';
     root.dataset.masterScrollDistance = '0';
     root.dataset.masterScrollProgress = '0.000';
   } else {
@@ -611,11 +668,13 @@ export function createScrollIdentity(root) {
         timeline.progress(0, true);
         educationSequence.resetBoundary();
         skillsSequence.resetBoundary();
+        projectsSequence.resetBoundary();
         clearIdentityTransforms();
         measure();
         timeline.invalidate();
         educationSequence.rebuild();
         skillsSequence.rebuild();
+        projectsSequence.rebuild?.();
         measureScrollDistances();
       },
       onRefresh: (self) => {
@@ -624,7 +683,9 @@ export function createScrollIdentity(root) {
           refreshState.identity * identityDistance +
           refreshState.education * educationDistance;
         const skillsRestoredScroll =
-          restoredScroll + refreshState.skills * skillsDistance;
+          restoredScroll +
+          refreshState.skills * skillsDistance +
+          (refreshState.projects ?? 0) * projectsDistance;
         if (Math.abs(self.scroll() - skillsRestoredScroll) > 1)
           self.scroll(skillsRestoredScroll);
         applyScrollState(refreshState);
@@ -642,6 +703,7 @@ export function createScrollIdentity(root) {
   }
 
   window.addEventListener('kinetic:navigate-section', onNavigationRequest);
+  window.addEventListener('kinetic:projects-navigate', onProjectsNavigation);
   cue.addEventListener('click', onCueClick);
 
   const contentObserver = new MutationObserver(() => {
@@ -757,6 +819,7 @@ export function createScrollIdentity(root) {
     destroy() {
       window.visualViewport?.removeEventListener('resize', onResize);
       window.removeEventListener('kinetic:navigate-section', onNavigationRequest);
+      window.removeEventListener('kinetic:projects-navigate', onProjectsNavigation);
       cue.removeEventListener('click', onCueClick);
       contentObserver.disconnect();
       educationObserver.disconnect();
@@ -767,6 +830,7 @@ export function createScrollIdentity(root) {
       timeline?.kill();
       educationSequence.destroy();
       skillsSequence.destroy();
+      projectsSequence.destroy();
       cueRevealTween?.kill();
       destination.setAttribute('aria-hidden', 'true');
       wordmark.removeAttribute('aria-hidden');

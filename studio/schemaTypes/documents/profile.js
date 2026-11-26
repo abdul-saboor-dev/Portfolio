@@ -168,14 +168,36 @@ export const profile = defineType({
       name: 'cvFile',
       title: 'CV PDF',
       type: 'file',
-      description:
-        'Optional. The View CV action remains unavailable until a published PDF is configured.',
+      description: 'Optional. When published, this PDF replaces the local demo document.',
       options: { accept: 'application/pdf' },
       validation: (rule) =>
         rule.custom((value) => {
           const isPdf = value?.asset?._ref?.endsWith('-pdf');
           return !value || isPdf || 'Upload a PDF document.';
         }),
+    }),
+    defineField({
+      name: 'cvPreviewImage',
+      title: 'CV preview image',
+      type: 'image',
+      description: 'Optional fallback preview for browsers without embedded PDF support.',
+    }),
+    defineField({
+      name: 'cvVisible',
+      title: 'Show View CV action',
+      type: 'boolean',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'cvDownloadAvailable',
+      title: 'Allow CV download',
+      type: 'boolean',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'cvLastUpdated',
+      title: 'CV last updated',
+      type: 'date',
     }),
   ],
   preview: {

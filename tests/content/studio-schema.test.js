@@ -29,9 +29,11 @@ test('the Studio exposes every required content document type', () => {
   assert.deepEqual(documentTypes, [
     'about',
     'contact',
+    'creativeWork',
     'education',
     'profile',
     'project',
+    'projectsSettings',
     'siteSettings',
     'skill',
     'skillCategory',
@@ -114,6 +116,7 @@ test('global portfolio documents use fixed singleton IDs', () => {
     'about',
     'contact',
     'profile',
+    'projectsSettings',
     'siteSettings',
     'skillsPresentation',
   ]);
@@ -122,9 +125,15 @@ test('global portfolio documents use fixed singleton IDs', () => {
 test('the profile exposes a replaceable PDF CV field', () => {
   const profile = schemaTypes.find(({ name }) => name === 'profile');
   const cvFile = profile.fields.find(({ name }) => name === 'cvFile');
+  const cvFields = new Map(profile.fields.map((field) => [field.name, field]));
 
   assert.equal(cvFile.type, 'file');
   assert.equal(cvFile.options.accept, 'application/pdf');
+  assert.equal(cvFields.get('cvTitle').type, 'string');
+  assert.equal(cvFields.get('cvPreviewImage').type, 'image');
+  assert.equal(cvFields.get('cvVisible').type, 'boolean');
+  assert.equal(cvFields.get('cvDownloadAvailable').type, 'boolean');
+  assert.equal(cvFields.get('cvLastUpdated').type, 'date');
 });
 
 test('the Studio exposes bounded Hero and About editorial fields', () => {

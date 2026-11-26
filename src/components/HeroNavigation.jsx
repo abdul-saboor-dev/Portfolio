@@ -10,7 +10,13 @@ const HERO_SECTIONS = Object.freeze([
 ]);
 
 const INITIAL_AVAILABLE_SECTIONS = Object.freeze(['home']);
-const TIMELINE_SECTION_IDS = new Set(['home', 'about', 'education', 'skills']);
+const TIMELINE_SECTION_IDS = new Set([
+  'home',
+  'about',
+  'education',
+  'skills',
+  'projects',
+]);
 
 function SectionItem({ section, activeId, availableIds, onNavigate, mobile = false }) {
   const isAvailable = availableIds.includes(section.id);
@@ -307,7 +313,8 @@ function HeroNavigation() {
       section.id === 'home' ||
       section.id === 'about' ||
       section.id === 'education' ||
-      section.id === 'skills';
+      section.id === 'skills' ||
+      section.id === 'projects';
     if (!isTimelineSection && menuPhase === 'closed') return;
 
     event.preventDefault();

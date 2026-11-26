@@ -29,9 +29,13 @@ import {
   SKILLS_HEADING_MAX_LENGTH,
 } from '@portfolio/content-model';
 import { z } from 'zod';
+import { CREATIVE_DEMOS, PROJECTS_COPY, PROJECTS_FALLBACK } from '../projects/content.js';
 
 const nullableText = (maximum) => z.string().trim().max(maximum).nullable().optional();
-const portableTextSchema = z.array(z.unknown()).default([]);
+const portableTextSchema = z
+  .array(z.unknown())
+  .nullish()
+  .transform((value) => value ?? []);
 const imageSchema = z.record(z.string(), z.unknown()).nullable().optional();
 const cvSchema = z
   .object({
@@ -40,6 +44,9 @@ const cvSchema = z
     }),
     title: z.string().trim().min(1).max(120),
     filename: nullableText(160),
+    previewImageUrl: z.url().nullable().optional(),
+    downloadAvailable: z.boolean().default(true),
+    lastUpdated: z.iso.date().nullable().optional(),
   })
   .nullable()
   .optional();
@@ -105,6 +112,10 @@ const profileSchema = z.object({
     .max(CV_ACTION_LABEL_MAX_LENGTH)
     .nullish()
     .transform((value) => value ?? 'View CV'),
+  cvVisible: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? true),
   taglines: z.array(taglineSchema).length(IDENTITY_TAGLINE_COUNT),
   portrait: imageSchema,
   cv: cvSchema,
@@ -164,16 +175,68 @@ const projectSchema = z.object({
   title: z.string().trim().min(1).max(100),
   slug: z.string().trim().min(1).max(96),
   order: z.number().int().min(0).default(0),
-  featured: z.boolean().default(false),
-  coverImage: z.record(z.string(), z.unknown()),
+  featured: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? false),
+  coverImage: z.record(z.string(), z.unknown()).nullable().optional(),
   shortDescription: z.string().trim().min(1).max(280),
   description: portableTextSchema,
   technologies: z.array(z.string().trim().min(1)).min(1).max(20),
-  githubUrl: z.url().nullable().optional(),
-  liveUrl: z.url().nullable().optional(),
-  media: z.array(z.unknown()).default([]),
+  githubUrl: safeExternalUrlSchema.nullable().optional(),
+  liveUrl: safeExternalUrlSchema.nullable().optional(),
+  media: z
+    .array(z.unknown())
+    .nullish()
+    .transform((value) => value ?? []),
   caseStudy: z.record(z.string(), z.unknown()).nullable().optional(),
   seo: z.record(z.string(), z.unknown()).nullable().optional(),
+  category: z.string().trim().min(1).max(90).default('Project'),
+  extendedDescription: nullableText(2000),
+  projectRole: nullableText(120),
+  status: nullableText(80),
+  desktopPreviewUrl: z.string().trim().min(1),
+  imageAlt: z.string().trim().min(1).max(160),
+  showGithub: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? true),
+  showLive: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? true),
+  visible: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? false),
+});
+
+const creativeWorkSchema = z.object({
+  _id: z.string(),
+  title: z.string().trim().min(1).max(100),
+  slug: nullableText(100),
+  category: z.string().trim().min(1).max(80),
+  description: z.string().trim().min(1).max(500),
+  extendedDescription: nullableText(2000),
+  artworkUrl: z.string().trim().min(1),
+  fullSizeUrl: nullableText(500),
+  additionalArtworks: z.array(z.unknown()).nullable().optional(),
+  video: z.unknown().nullable().optional(),
+  tools: z.array(z.string().trim().min(1).max(80)).nullable().optional(),
+  series: nullableText(120),
+  featured: z.boolean().nullable().optional(),
+  alt: z.string().trim().min(1).max(160),
+  externalUrl: safeExternalUrlSchema.nullable().optional(),
+  visible: z.boolean().default(true),
+  order: z.number().int().min(0).default(0),
+});
+
+const projectsCopySchema = z.object({
+  buildDescription: z.string().trim().min(1).max(180),
+  designDescription: z.string().trim().min(1).max(180),
+  creativeIntroduction: z.string().trim().min(1).max(180),
+  closingTitle: z.string().trim().min(1).max(80),
+  closingDescription: z.string().trim().min(1).max(180),
 });
 
 const contactSchema = z.object({
@@ -204,6 +267,7 @@ export const FALLBACK_CONTENT = Object.freeze({
     heroIntroduction: APPROVED_HERO_INTRODUCTION,
     projectsAction: DEFAULT_PROJECTS_ACTION,
     cvActionLabel: 'View CV',
+    cvVisible: true,
     portrait: null,
     cv: null,
     taglines: Object.freeze(
@@ -218,7 +282,9 @@ export const FALLBACK_CONTENT = Object.freeze({
   }),
   skills: APPROVED_SKILLS,
   skillCategories: Object.freeze([]),
-  projects: Object.freeze([]),
+  projects: PROJECTS_FALLBACK,
+  creativeWork: CREATIVE_DEMOS,
+  projectsCopy: PROJECTS_COPY,
   contact: null,
   siteSettings: null,
 });
@@ -236,6 +302,26 @@ function parseSection(schema, value, fallback, path, issues) {
       .join('; '),
   });
   return fallback;
+}
+
+function parseVisibleCollection(schema, value, fallback, path, issues) {
+  if (value === null || value === undefined) return fallback;
+  if (!Array.isArray(value)) {
+    issues.push({ path, message: `${path} must be a list.` });
+    return fallback;
+  }
+  return value
+    .flatMap((item, index) => {
+      const result = schema.safeParse(item);
+      if (result.success) return [result.data];
+      issues.push({
+        path: `${path}.${index}`,
+        message: result.error.issues.map((issue) => issue.message).join('; '),
+      });
+      return [];
+    })
+    .filter((item) => item.visible)
+    .sort((a, b) => a.order - b.order || a._id.localeCompare(b._id));
 }
 
 export function validatePortfolioContent(rawValue) {
@@ -297,7 +383,27 @@ export function validatePortfolioContent(rawValue) {
       'skillCategories',
       issues,
     ),
-    projects: parseSection(z.array(projectSchema), raw.projects, [], 'projects', issues),
+    projects: parseVisibleCollection(
+      projectSchema,
+      raw.projects,
+      FALLBACK_CONTENT.projects,
+      'projects',
+      issues,
+    ),
+    creativeWork: parseVisibleCollection(
+      creativeWorkSchema,
+      raw.creativeWork,
+      FALLBACK_CONTENT.creativeWork,
+      'creativeWork',
+      issues,
+    ),
+    projectsCopy: parseSection(
+      projectsCopySchema,
+      raw.projectsCopy,
+      FALLBACK_CONTENT.projectsCopy,
+      'projectsCopy',
+      issues,
+    ),
     contact: parseSection(contactSchema, raw.contact, null, 'contact', issues),
     siteSettings: parseSection(
       siteSettingsSchema,

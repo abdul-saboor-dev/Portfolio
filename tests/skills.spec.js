@@ -48,20 +48,21 @@ const readSkillGeometry = (page) =>
     }),
   );
 
-const countVisibleCollisions = (items) => {
+const findVisibleCollisions = (items) => {
   const visible = items.filter((item) => item.opacity > 0.2);
-  let overlaps = 0;
+  const overlaps = [];
   for (let left = 0; left < visible.length; left += 1) {
     for (let right = left + 1; right < visible.length; right += 1) {
       const a = visible[left];
       const b = visible[right];
       const horizontal = Math.min(a.right, b.right) - Math.max(a.left, b.left);
       const vertical = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-      if (horizontal > 2 && vertical > 2) overlaps += 1;
+      if (horizontal > 2 && vertical > 2) overlaps.push({ a, b, horizontal, vertical });
     }
   }
   return overlaps;
 };
+const countVisibleCollisions = (items) => findVisibleCollisions(items).length;
 
 const countTextIntersections = (page) =>
   page.evaluate(() => {
@@ -114,8 +115,9 @@ test('hands the final Education record into a reversible vertical Skills formati
   await expect(page.locator('[data-skill-index]').first()).toBeVisible();
 
   await setSkillsProgress(page, 0.5);
-  const collisions = countVisibleCollisions(await readSkillGeometry(page));
-  expect(collisions).toBe(0);
+  const geometry = await readSkillGeometry(page);
+  const collisions = countVisibleCollisions(geometry);
+  expect(collisions, JSON.stringify(findVisibleCollisions(geometry))).toBe(0);
 
   await setSkillsProgress(page, 0.7);
   const movingIcons = await page
@@ -139,7 +141,7 @@ test('hands the final Education record into a reversible vertical Skills formati
       const ids = items.map((item) => item.dataset.skillId);
       return new Set(ids).size;
     }),
-  ).toBe(17);
+  ).toBe(18);
   await expect(
     page
       .getByRole('navigation', { name: 'Portfolio sections' })
@@ -399,7 +401,7 @@ test('keeps the completed irregular formation readable and overflow-free across 
           document.documentElement.scrollWidth <= document.documentElement.clientWidth,
       ),
     ).toBe(true);
-    await expect(page.locator('[data-skill-index]')).toHaveCount(17);
+    await expect(page.locator('[data-skill-index]')).toHaveCount(18);
     await expect(page.locator('[data-skills-code]')).toHaveCount(0);
     const geometry = await readSkillGeometry(page);
     expect(countVisibleCollisions(geometry)).toBe(0);
@@ -511,6 +513,6 @@ test('renders Skills as readable normal flow for reduced motion', async ({ page 
   await expect(
     page.getByRole('heading', { name: 'Built with curiosity.' }),
   ).toBeVisible();
-  await expect(page.locator('[data-skill-index]')).toHaveCount(17);
+  await expect(page.locator('[data-skill-index]')).toHaveCount(18);
   await expect(page.locator('[data-skills-code]')).toHaveCount(0);
 });

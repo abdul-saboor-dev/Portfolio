@@ -1,0 +1,96 @@
+export const PROJECTS_COPY = Object.freeze({
+  buildDescription: 'Websites, applications, and interactive experiments.',
+  designDescription: 'Posters, graphics, and visual systems.',
+  creativeIntroduction:
+    "Posters, graphics, and visual ideas I've explored through design.",
+  closingTitle: 'More in the works.',
+  closingDescription: 'A few things are still taking shape.',
+});
+
+export const PROJECTS_FALLBACK = Object.freeze([
+  {
+    _id: 'dae2uni-pathway',
+    title: 'DAE2UNI Pathway',
+    slug: 'dae2uni-pathway',
+    category: 'Full-Stack Web Application',
+    shortDescription:
+      'A platform built for DAE CIT students to explore universities, discover computing programs, and understand their options after completing their diploma.',
+    technologies: ['React', 'Vite', 'Tailwind CSS', 'Node.js', 'Express', 'MongoDB'],
+    status: 'In Development',
+    order: 0,
+    visible: true,
+    featured: true,
+    desktopPreviewUrl: '/projects/dae2uni-desktop.png',
+    imageAlt: 'DAE2UNI Pathway university route home page',
+    githubUrl: 'https://github.com/abdul-saboor-dev/DAE2UNI-Pathway',
+    liveUrl: 'https://dae2uni-pathway.vercel.app/',
+    showGithub: true,
+    showLive: true,
+  },
+  {
+    _id: 'interactive-portrait-showcase',
+    title: 'Interactive Portrait Showcase',
+    slug: 'interactive-portrait-showcase',
+    category: 'Creative Coding Experiment',
+    shortDescription:
+      'An interactive portrait that follows your cursor using 340 individual frames. Built with HTML5 Canvas, with smooth head movements and progressive image loading.',
+    technologies: ['React 19', 'Vite', 'JavaScript', 'HTML5 Canvas'],
+    order: 1,
+    visible: true,
+    featured: false,
+    desktopPreviewUrl: '/projects/portrait-desktop.png',
+    imageAlt: 'Three portrait poses from the interactive canvas experiment',
+    githubUrl: 'https://github.com/abdul-saboor-dev/interactive-portrait-showcase',
+    liveUrl: 'https://interactive-portrait-showcase.vercel.app/',
+    showGithub: true,
+    showLive: true,
+  },
+  {
+    _id: 'portfolio-legacy',
+    title: 'Portfolio Legacy',
+    slug: 'portfolio-legacy',
+    category: 'Personal Portfolio',
+    shortDescription:
+      'My first personal portfolio, built to showcase my projects, skills, and experience. It was where I started experimenting with responsive layouts, animations, and visual design.',
+    technologies: ['HTML', 'CSS', 'JavaScript'],
+    order: 2,
+    visible: true,
+    featured: false,
+    desktopPreviewUrl: '/projects/legacy-desktop.png',
+    imageAlt: 'Purple Portfolio Legacy home page',
+    githubUrl: 'https://github.com/abdul-saboor-dev/portfolio-legacy',
+    liveUrl: 'https://abdulsaboor-dev.netlify.app/',
+    showGithub: true,
+    showLive: true,
+  },
+]);
+
+export const CREATIVE_DEMOS = Object.freeze([
+  {
+    _id: 'natural-forms',
+    title: 'Natural Forms',
+    category: 'Editorial poster',
+    description: 'A monochrome study of organic forms.',
+    order: 0,
+    visible: true,
+    demo: true,
+  },
+  {
+    _id: 'a-03',
+    title: 'A / 03',
+    category: 'Typography study',
+    description: 'A study of typography and landscape.',
+    order: 1,
+    visible: true,
+    demo: true,
+  },
+  {
+    _id: 'orbital',
+    title: 'Orbital',
+    category: 'Poster study',
+    description: 'A monochrome planetary composition.',
+    order: 2,
+    visible: true,
+    demo: true,
+  },
+]);

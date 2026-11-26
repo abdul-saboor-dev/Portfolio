@@ -2,6 +2,7 @@ export const singletonTypes = new Set([
   'profile',
   'about',
   'skillsPresentation',
+  'projectsSettings',
   'contact',
   'siteSettings',
 ]);
@@ -39,6 +40,8 @@ export const structure = (S) =>
       S.divider(),
       orderedList(S, 'Education', 'education', 'startYear'),
       orderedList(S, 'Projects', 'project'),
+      orderedList(S, 'Creative work', 'creativeWork'),
+      singletonItem(S, 'Projects presentation', 'projectsSettings', 'projectsSettings'),
       S.divider(),
       singletonItem(S, 'Skills presentation', 'skillsPresentation', 'skillsPresentation'),
       orderedList(S, 'Skill categories', 'skillCategory'),

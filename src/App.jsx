@@ -15,6 +15,9 @@ function App() {
           education={content.education}
           skills={content.skills}
           skillsPresentation={content.skillsPresentation}
+          projects={content.projects}
+          creativeWork={content.creativeWork}
+          projectsCopy={content.projectsCopy}
           profile={content.profile}
           contentStatus={status}
         />
