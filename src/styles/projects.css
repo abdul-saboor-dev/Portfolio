@@ -745,7 +745,7 @@
   .projects__chapter .projects__editorial {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: none;
     min-height: 0;
   }
   .projects__chapter--build .projects__field,
@@ -764,13 +764,13 @@
     margin-top: 0.25rem;
   }
   .projects__controls {
-    margin-top: auto;
-    padding-top: 0.35rem;
+    margin-top: clamp(0.75rem, 2vh, 1.25rem);
+    padding-top: 0;
   }
   .projects__continue {
     position: static;
     align-self: flex-end;
-    margin: 0;
+    margin-top: 0;
   }
 }
 @media (max-width: 600px) and (max-height: 700px) and (orientation: portrait) {

@@ -123,41 +123,49 @@ test('Creative follows native scroll and artwork viewer returns focus', async ({
   await expect(page.getByRole('button', { name: 'View artwork' })).toBeFocused();
 });
 
-test('short mobile keeps both chapter images clear of the project details', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 320, height: 568 });
-  const metrics = await openProjects(page);
-  for (const [unit, chapter, card] of [
-    [0.9, 'build', '[data-project-card="0"]'],
-    [5.55, 'design', '[data-artwork="0"]'],
-  ]) {
-    await seek(page, metrics, unit);
-    const bounds = await page.evaluate(
-      ({ chapter, card }) => ({
-        details: document
-          .querySelector('.projects__chapter--' + chapter + ' .projects__editorial')
-          .getBoundingClientRect()
-          .toJSON(),
-        card: document.querySelector(card).getBoundingClientRect().toJSON(),
-        links: document
-          .querySelector('.projects__chapter--' + chapter + ' .projects__links')
-          ?.getBoundingClientRect()
-          .toJSON(),
-        controls: document
-          .querySelector('.projects__chapter--' + chapter + ' .projects__controls')
-          .getBoundingClientRect()
-          .toJSON(),
-        overflow: document.documentElement.scrollWidth > innerWidth + 1,
-      }),
-      { chapter, card },
-    );
-    expect(bounds.card.bottom).toBeLessThan(bounds.details.top + 3);
-    if (bounds.links)
-      expect(bounds.controls.top).toBeGreaterThan(bounds.links.bottom + 4);
-    expect(bounds.overflow).toBe(false);
-  }
-});
+for (const [width, height] of [
+  [320, 568],
+  [375, 667],
+  [390, 844],
+  [430, 932],
+]) {
+  test(`mobile Projects media and controls stay in flow at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    const metrics = await openProjects(page);
+    for (const [unit, chapter, card] of [
+      [0.9, 'build', '[data-project-card="0"]'],
+      [5.55, 'design', '[data-artwork="0"]'],
+    ]) {
+      await seek(page, metrics, unit);
+      const bounds = await page.evaluate(
+        ({ chapter, card }) => {
+          const root = document.querySelector('.projects__chapter--' + chapter);
+          const rect = (selector) =>
+            root.querySelector(selector)?.getBoundingClientRect();
+          return {
+            media: document.querySelector(card).getBoundingClientRect().toJSON(),
+            field: rect('.projects__field').toJSON(),
+            details: rect('.projects__editorial').toJSON(),
+            links: rect('.projects__links')?.toJSON(),
+            controls: rect('.projects__controls').toJSON(),
+            continue: rect('.projects__continue').toJSON(),
+            overflow: document.documentElement.scrollWidth > innerWidth + 1,
+          };
+        },
+        { chapter, card },
+      );
+      expect(bounds.media.bottom).toBeLessThan(bounds.field.bottom + 1);
+      expect(bounds.field.bottom).toBeLessThanOrEqual(bounds.details.top + 1);
+      if (bounds.links)
+        expect(bounds.controls.top).toBeGreaterThan(bounds.links.bottom + 4);
+      expect(bounds.continue.top).toBeGreaterThan(bounds.controls.bottom + 4);
+      expect(bounds.continue.bottom).toBeLessThan(height);
+      expect(bounds.overflow).toBe(false);
+    }
+  });
+}
 
 test('short landscape keeps the active design print inside the viewport', async ({
   page,
