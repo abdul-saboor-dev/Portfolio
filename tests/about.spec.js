@@ -163,3 +163,70 @@ test('Home and About navigation control the existing master timeline', async ({
     'page',
   );
 });
+
+test('reverse navigation restores unclipped About from later sections', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const origin of ['education', 'skills', 'projects']) {
+      await page.goto('/');
+      await waitForScrollIdentity(page);
+      await page.evaluate((section) => {
+        const hero = document.querySelector('.kinetic-hero');
+        const start = Number(hero.dataset.scrollStart);
+        const identity = Number(hero.dataset.scrollDistance);
+        const education = Number(hero.dataset.educationScrollDistance);
+        const skills = Number(hero.dataset.skillsScrollDistance);
+        const projects = Number(hero.dataset.projectsScrollDistance);
+        const offset =
+          section === 'education'
+            ? identity + education * 0.6
+            : section === 'skills'
+              ? identity + education + skills * 0.6
+              : identity + education + skills + projects * 0.35;
+        window.scrollTo(0, start + offset);
+      }, origin);
+      await page.waitForTimeout(100);
+      if (viewport.width < 600) {
+        await page.getByRole('button', { name: 'Menu', exact: true }).click();
+        await page
+          .getByRole('navigation', { name: 'Mobile portfolio sections' })
+          .getByRole('link', { name: 'About' })
+          .click();
+      } else {
+        await page
+          .getByRole('navigation', { name: 'Portfolio sections' })
+          .getByRole('link', { name: 'About' })
+          .click();
+      }
+      await expect
+        .poll(
+          () =>
+            page.evaluate(() =>
+              Number(document.querySelector('.kinetic-hero').dataset.scrollProgress),
+            ),
+          { message: `${origin} at ${viewport.width}px navigates to About` },
+        )
+        .toBeCloseTo(0.42, 3);
+      await page.waitForTimeout(600);
+      const state = await page.locator('.kinetic-about__content').evaluate((element) => ({
+        clipPath: getComputedStyle(element).clipPath,
+        rect: element.getBoundingClientRect().toJSON(),
+      }));
+      expect(state.clipPath, `${origin} at ${viewport.width}px`).toMatch(/^inset\(/);
+      expect(
+        state.clipPath
+          .match(/-?\d+(?:\.\d+)?/g)
+          .every((value) => Math.abs(Number(value)) < 0.01),
+        `${origin} at ${viewport.width}px: ${state.clipPath}`,
+      ).toBe(true);
+      expect(state.rect.left).toBeGreaterThanOrEqual(-1);
+      expect(state.rect.right).toBeLessThanOrEqual(viewport.width + 1);
+    }
+  }
+});

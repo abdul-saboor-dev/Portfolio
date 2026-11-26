@@ -149,6 +149,7 @@ export function createEducationSequence({ aboutContent, root }) {
   };
 
   const resetBoundary = () => {
+    timeline.progress(0, true);
     gsap.set(stage, { autoAlpha: 0 });
     syncState(0);
   };
