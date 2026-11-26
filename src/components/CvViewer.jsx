@@ -27,6 +27,7 @@ function CvViewer({ document: cvDocument, label }) {
     timelineRef.current?.kill();
     const finishClose = () => {
       if (dialog.open) dialog.close();
+      dialog.inert = false;
       gsap.set([dialog, panel], { clearProps: 'all' });
       if (pageLockedRef.current) {
         root.style.overflow = previousOverflowRef.current;
@@ -47,11 +48,11 @@ function CvViewer({ document: cvDocument, label }) {
       if (!dialog.open) dialog.showModal();
       dialog.inert = false;
       gsap.set(dialog, { clipPath: 'inset(0 0 100% 0 round 16px)', y: -8 });
-      gsap.set(panel, { y: -8 });
+      gsap.set(panel, { autoAlpha: 0, y: -8 });
       closeRef.current?.focus({ preventScroll: true });
       if (reduced) {
         gsap.set(dialog, { clipPath: 'inset(0 0 0% 0 round 16px)', y: 0 });
-        gsap.set(panel, { y: 0 });
+        gsap.set(panel, { autoAlpha: 1, y: 0 });
         requestAnimationFrame(() => setPhase('open'));
         return undefined;
       }
@@ -64,7 +65,7 @@ function CvViewer({ document: cvDocument, label }) {
           duration: 0.44,
           ease: 'power3.out',
         })
-        .to(panel, { y: 0, duration: 0.34, ease: 'power3.out' }, 0.04);
+        .to(panel, { autoAlpha: 1, y: 0, duration: 0.34, ease: 'power3.out' }, 0.04);
       return () => timeline.kill();
     }
     if (phase === 'closing') {
@@ -75,16 +76,18 @@ function CvViewer({ document: cvDocument, label }) {
       }
       const timeline = gsap.timeline({ onComplete: finishClose });
       timelineRef.current = timeline;
-      timeline.to(panel, { y: -6, duration: 0.24, ease: 'power2.inOut' }).to(
-        dialog,
-        {
-          clipPath: 'inset(0 0 100% 0 round 16px)',
-          y: -8,
-          duration: 0.28,
-          ease: 'power2.inOut',
-        },
-        0.1,
-      );
+      timeline
+        .to(panel, { autoAlpha: 0, y: -6, duration: 0.24, ease: 'power2.inOut' })
+        .to(
+          dialog,
+          {
+            clipPath: 'inset(0 0 100% 0 round 16px)',
+            y: -8,
+            duration: 0.28,
+            ease: 'power2.inOut',
+          },
+          0.1,
+        );
       return () => timeline.kill();
     }
     return undefined;

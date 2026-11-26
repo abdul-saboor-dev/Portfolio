@@ -13,9 +13,14 @@ test('local demo CV opens, downloads, and restores focus and scroll', async ({
   const pdf = await response.body();
   expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
   const trigger = page.getByRole('button', { name: 'View CV' });
+  const before = await page.evaluate(() => ({
+    scrollY: window.scrollY,
+    identity: document.querySelector('.kinetic-hero').dataset.scrollIdentity,
+  }));
   await trigger.click();
   const dialog = page.getByRole('dialog', { name: 'CV' });
   await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveCSS('border-radius', '16px');
   await expect(dialog.getByText('Curriculum vitae')).toBeVisible();
   await expect(dialog.getByRole('img', { name: 'CV document preview' })).toHaveAttribute(
     'src',
@@ -27,9 +32,15 @@ test('local demo CV opens, downloads, and restores focus and scroll', async ({
   await dialog.getByRole('link', { name: 'Download PDF' }).click();
   expect((await download).suggestedFilename()).toBe('abdul-saboor-cv.pdf');
   await page.keyboard.press('Escape');
+  await expect(dialog).toBeVisible();
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe('');
+  expect(await page.evaluate(() => window.scrollY)).toBe(before.scrollY);
+  await expect(page.locator('.kinetic-hero')).toHaveAttribute(
+    'data-scroll-identity',
+    before.identity,
+  );
 });
 
 test('artwork viewer uses shared close control and restores page state', async ({
