@@ -28,6 +28,14 @@ test('local demo CV opens, downloads, and restores focus and scroll', async ({
   );
   await dialog.getByRole('button', { name: 'Zoom in' }).click();
   await expect(dialog.locator('.cv-viewer__zoom output')).toHaveText('125%');
+  const documentScroll = dialog.locator('.cv-viewer__document');
+  await dialog.getByRole('button', { name: 'Zoom in' }).click();
+  await expect(documentScroll).toHaveCSS('scrollbar-width', 'thin');
+  await documentScroll.hover();
+  await page.mouse.wheel(0, 250);
+  await expect
+    .poll(() => documentScroll.evaluate((element) => element.scrollTop))
+    .toBeGreaterThan(0);
   const download = page.waitForEvent('download');
   await dialog.getByRole('link', { name: 'Download PDF' }).click();
   expect((await download).suggestedFilename()).toBe('abdul-saboor-cv.pdf');

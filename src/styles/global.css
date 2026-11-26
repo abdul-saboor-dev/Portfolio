@@ -1262,7 +1262,28 @@ a.hero-navigation__item {
   padding: clamp(0.5rem, 1vw, 1rem);
   overflow: auto;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #73736f #e8e8e4;
   background: #e8e8e4;
+}
+
+.cv-viewer__document::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.cv-viewer__document::-webkit-scrollbar-track {
+  background: #e8e8e4;
+}
+
+.cv-viewer__document::-webkit-scrollbar-thumb {
+  border: 2px solid #e8e8e4;
+  border-radius: 999px;
+  background: #73736f;
+}
+
+.cv-viewer__document::-webkit-scrollbar-thumb:hover {
+  background: #4d4d49;
 }
 
 .cv-viewer__document iframe {
