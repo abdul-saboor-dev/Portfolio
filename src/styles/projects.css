@@ -782,12 +782,17 @@
     padding-top: 5.9rem;
     padding-bottom: 0.65rem;
   }
-  .projects__chapter--build .projects__field,
-  .projects__chapter--design .projects__field {
-    height: 22vh;
+  .projects__chapter--build .projects__field {
+    height: max(22vh, calc(min(38.25vw, 10.55rem) + 1rem));
+  }
+  .projects__card {
+    width: min(68vw, 21rem);
   }
   .projects__chapter--design .projects__field {
-    height: 27vh;
+    height: max(27vh, calc(min(52vw, 16rem) + 1rem));
+  }
+  .projects__artwork {
+    width: min(39vw, 12rem);
   }
   .projects__intro {
     font-size: 0.83rem;
@@ -797,6 +802,16 @@
   }
   .projects__detail h3 {
     font-size: 1.65rem;
+  }
+}
+
+@media (min-width: 430px) and (max-width: 600px) and (max-height: 700px) and (orientation: portrait) {
+  .projects__chapter--build .projects__field {
+    height: max(22vh, calc(min(38.25vw, 11.82rem) + 1rem));
+  }
+  .projects__detail > p:not(.projects__category) {
+    max-width: none;
+    font-size: 0.82rem;
   }
 }
 

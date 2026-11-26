@@ -167,6 +167,46 @@ for (const [width, height] of [
   });
 }
 
+for (const width of [430, 486, 595, 597]) {
+  test(`short wide Projects layout clears media and controls at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 599 });
+    const metrics = await openProjects(page);
+    for (const [unit, chapter, card] of [
+      [1.85, 'build', '[data-project-card="1"]'],
+      [2.85, 'build', '[data-project-card="2"]'],
+      [5.25, 'design', '[data-artwork="0"]'],
+    ]) {
+      await seek(page, metrics, unit);
+      const bounds = await page.evaluate(
+        ({ chapter, card }) => {
+          const root = document.querySelector('.projects__chapter--' + chapter);
+          const rect = (selector) => root.querySelector(selector).getBoundingClientRect();
+          return {
+            media: document.querySelector(card).getBoundingClientRect().toJSON(),
+            detail: rect('.projects__detail[aria-hidden="false"]').toJSON(),
+            controls: rect('.projects__controls').toJSON(),
+            continue: rect('.projects__continue').toJSON(),
+            indicator: document
+              .querySelector('.projects__indicator')
+              .getBoundingClientRect()
+              .toJSON(),
+            scrollWidth: document.documentElement.scrollWidth,
+          };
+        },
+        { chapter, card },
+      );
+      expect(bounds.media.top).toBeGreaterThan(bounds.indicator.bottom + 8);
+      expect(bounds.media.bottom).toBeLessThan(bounds.detail.top - 4);
+      expect(bounds.controls.top).toBeGreaterThan(bounds.detail.bottom + 8);
+      expect(bounds.continue.top).toBeGreaterThan(bounds.controls.bottom + 8);
+      expect(bounds.continue.bottom).toBeLessThan(599);
+      expect(bounds.scrollWidth).toBeLessThanOrEqual(width + 1);
+    }
+  });
+}
+
 test('short landscape keeps the active design print inside the viewport', async ({
   page,
 }) => {
